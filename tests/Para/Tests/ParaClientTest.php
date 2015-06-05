@@ -22,6 +22,7 @@ namespace Para\Tests;
 use Para\ParaClient;
 use Para\ParaObject;
 use Para\Pager;
+use Para\Constraint;
 
 /**
  * ParaClient Test
@@ -45,50 +46,52 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 	protected $a2;
 
 	protected function setUp() {
-		$this->pc = new ParaClient("app:my-app", "8KXTq2EkZ+6jNyfEHylODMs6jYnEoD+bi/aCzEa+JH+CRvuUI6rWjw==");
+		$this->pc = new ParaClient("app:my-app", "z0bdc25x8d0RjtzO7GehIYTbHkVq/QWSGXXRNtQHTMpG+rMjenjSzg==");
 		$this->pc->setEndpoint("http://localhost:8080");
 		if($this->pc->me() == null) {
 			throw new \Exception("Local Para server must be started before testing.");
 		}
 
-		$u = new ParaObject("111");
-		$u->setName("John Doe");
-		$u->setTags(array("one", "two", "three"));
+		$this->u = new ParaObject("111");
+		$this->u->setName("John Doe");
 
-		$u1 = new ParaObject("222");
-		$u1->setName("Joe Black");
-		$u1->setTags(array("two", "four", "three"));
+		$this->u->setTags(array("one", "two", "three"));
 
-		$u2 = new ParaObject("333");
-		$u2->setName("Ann Smith");
-		$u2->setTags(array("four", "five", "three"));
+		$this->u1 = new ParaObject("222");
+		$this->u1->setName("Joe Black");
+		$this->u1->setTags(array("two", "four", "three"));
 
-		$t = new ParaObject("test", "tag");
-		$t->count = 3;
+		$this->u2 = new ParaObject("333");
+		$this->u2->setName("Ann Smith");
+		$this->u2->setTags(array("four", "five", "three"));
 
-		$a1 = new ParaObject("adr1", "address");
-		$a1->setName("Place 1");
-		$a1->setParentid($u->getId());
-		$a1->setCreatorid($u->getId());
-		$a1->address = "NYC";
-		$a1->country = "US";
-		$a1->latlng = "40.67,-73.94";
+		$this->t = new ParaObject("tag:test", "tag");
+		$this->t->tag = "test";
+		$this->t->count = 3;
 
-		$a2 = new ParaObject("adr2", "address");
-		$a2->setName("Place 2");
-		$a2->setParentid($t->getId());
-		$a2->setCreatorid($t->getId());
-		$a2->address = "NYC";
-		$a2->country = "US";
-		$a2->latlng = "40.69,-73.95";
+		$this->a1 = new ParaObject("adr1", "address");
+		$this->a1->setName("Place 1");
+		$this->a1->setParentid($this->u->getId());
+		$this->a1->setCreatorid($this->u->getId());
+		$this->a1->address = "NYC";
+		$this->a1->country = "US";
+		$this->a1->latlng = "40.67,-73.94";
 
-		$s1 = new ParaObject("s1");
-		$s1->setName("This is a little test sentence. Testing, one, two, three.");
+		$this->a2 = new ParaObject("adr2", "address");
+		$this->a2->setName("Place 2");
+		$this->a2->setParentid($this->t->getId());
+		$this->a2->setCreatorid($this->t->getId());
+		$this->a2->address = "NYC";
+		$this->a2->country = "US";
+		$this->a2->latlng = "40.69,-73.95";
 
-		$s2 = new ParaObject("s2");
-		$s2->setName("We are testing this thing. This sentence is a test. One, two.");
+		$this->s1 = new ParaObject("s1");
+		$this->s1->setName("This is a little test sentence. Testing, one, two, three.");
 
-		$this->pc->createAll(array($u, $u1, $u2, $t, $s1, $s2, $a1, $a2));
+		$this->s2 = new ParaObject("s2");
+		$this->s2->setName("We are testing this thing. This sentence is a test. One, two.");
+
+		$this->pc->createAll(array($this->u, $this->u1, $this->u2, $this->t, $this->s1, $this->s2, $this->a1, $this->a2));
 	}
 
 	protected function tearDown() {
@@ -227,11 +230,217 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 		$this->assertTrue(in_array(self::catsType, $this->pc->getApp()->datatypes));
 	}
 
-	public function testTimestamp() {
-		$this->assertGreaterThan(0, $this->pc->getTimestamp());
+	public function testSearch() {
+//		ArrayList<Sysprop> bats = new ArrayList<Sysprop>();
+//		for (int i = 0; i < 5; i++) {
+//			Sysprop s = new Sysprop(batsType + i);
+//			s.setType(batsType);
+//			s.addProperty("foo", "bat");
+//			bats.add(s);
+//		}
+//		pc.createAll(bats);
+		sleep(1);
+
+		$this->assertNull($this->pc->findById(null));
+		$this->assertNull($this->pc->findById(""));
+		$this->assertNotNull($this->pc->findById($this->u->getId()));
+		$this->assertNotNull($this->pc->findById($this->t->getId()));
+
+		$this->assertTrue(empty($this->pc->findByIds(null)));
+		$this->assertEquals(3, sizeof($this->pc->findByIds(array($this->u->getId(), $this->u1->getId(), $this->u2->getId()))));
+
+		$this->assertTrue(empty($this->pc->findNearby(null, null, 100, 1, 1)));
+		$l1 = $this->pc->findNearby($this->u->getType(), "*", 10, 40.60, -73.90);
+		$this->assertFalse(empty($l1));
+
+		$this->assertTrue(empty($this->pc->findNearby(null, null, 100, 1, 1)));
+		$l1 = $this->pc->findNearby($this->u->getType(), "*", 10, 40.60, -73.90);
+		$this->assertFalse(empty($l1));
+
+		$this->assertTrue(empty($this->pc->findPrefix(null, null, "")));
+		$this->assertTrue(empty($this->pc->findPrefix("", "null", "xx")));
+		$this->assertFalse(empty($this->pc->findPrefix($this->u->getType(), "name", "ann")));
+
+		//$this->assertFalse(empty($this->pc->findQuery(null, null)));
+		$this->assertFalse(empty($this->pc->findQuery("", "*")));
+		$this->assertEquals(2, sizeof($this->pc->findQuery($this->a1->getType(), "country:US")));
+		$this->assertFalse(empty($this->pc->findQuery($this->u->getType(), "ann")));
+		$this->assertFalse(empty($this->pc->findQuery($this->u->getType(), "Ann")));
+		$this->assertTrue(sizeof($this->pc->findQuery(null, "*")) > 4);
+
+		$p = new Pager();
+		$this->assertEquals(0, $p->count);
+		$res = $this->pc->findQuery($this->u->getType(), "*", $p);
+		$this->assertEquals(sizeof($res), $p->count);
+		$this->assertTrue($p->count > 0);
+
+		$this->assertTrue(empty($this->pc->findSimilar($this->t->getType(), "", null, null)));
+		$this->assertTrue(empty($this->pc->findSimilar($this->t->getType(), "", array(), "")));
+		$res = $this->pc->findSimilar($this->s1->getType(), $this->s1->getId(), array("name"), $this->s1->getName());
+		$this->assertFalse(empty($res));
+		$this->assertEquals($this->s2->getId(), $res[0]->getId());
+
+		$i0 = sizeof($this->pc->findTagged($this->u->getType(), null));
+		$i1 = sizeof($this->pc->findTagged($this->u->getType(), array("two")));
+		$i2 = sizeof($this->pc->findTagged($this->u->getType(), array("one", "two")));
+		$i3 = sizeof($this->pc->findTagged($this->u->getType(), array("three")));
+		$i4 = sizeof($this->pc->findTagged($this->u->getType(), array("four", "three")));
+		$i5 = sizeof($this->pc->findTagged($this->u->getType(), array("five", "three")));
+		$i6 = sizeof($this->pc->findTagged($this->t->getType(), array("four", "three")));
+
+		$this->assertEquals(0, $i0);
+		$this->assertEquals(2, $i1);
+		$this->assertEquals(1, $i2);
+		$this->assertEquals(3, $i3);
+		$this->assertEquals(2, $i4);
+		$this->assertEquals(1, $i5);
+		$this->assertEquals(0, $i6);
+
+		$this->assertFalse(empty($this->pc->findTags(null)));
+		$this->assertFalse(empty($this->pc->findTags("")));
+		$this->assertTrue(empty($this->pc->findTags("unknown")));
+		$this->assertTrue(sizeof($this->pc->findTags($this->t->tag)) >= 1);
+
+		$this->assertEquals(3, sizeof($this->pc->findTermInList($this->u->getType(), "id",
+				array($this->u->getId(), $this->u1->getId(), $this->u2->getId(), "xxx", "yyy"))));
+
+		// many terms
+		$terms = array();
+//		$terms["type"] = $this->u->getType();
+		$terms["id"] = $this->u->getId();
+
+		$terms1 = array();
+		$terms1["type"] = null;
+		$terms1["id"] = " ";
+
+		$terms2 = array();
+		$terms2[" "] = "bad";
+		$terms2[""] = "";
+
+		$this->assertEquals(1, sizeof($this->pc->findTerms($this->u->getType(), $terms, true)));
+		$this->assertTrue(empty($this->pc->findTerms($this->u->getType(), $terms1, true)));
+		$this->assertTrue(empty($this->pc->findTerms($this->u->getType(), $terms2, true)));
+
+		// single term
+		$this->assertTrue(empty($this->pc->findTerms(null, null, true)));
+		$this->assertTrue(empty($this->pc->findTerms($this->u->getType(), array("" => null), true)));
+		$this->assertTrue(empty($this->pc->findTerms($this->u->getType(), array("" => ""), true)));
+		$this->assertTrue(empty($this->pc->findTerms($this->u->getType(), array("term" => null), true)));
+		$this->assertTrue(sizeof($this->pc->findTerms($this->u->getType(), array("type" => $this->u->getType()), true)) >= 2);
+
+		$this->assertTrue(empty($this->pc->findWildcard($this->u->getType(), null, null)));
+		$this->assertTrue(empty($this->pc->findWildcard($this->u->getType(), "", "")));
+		$this->assertFalse(empty($this->pc->findWildcard($this->u->getType(), "name", "an*")));
+
+		$this->assertTrue($this->pc->getCount(null) > 4);
+		$this->assertNotEquals(0, $this->pc->getCount(""));
+		$this->assertEquals(0, $this->pc->getCount("test"));
+		$this->assertTrue($this->pc->getCount($this->u->getType()) >= 3);
+
+		$this->assertEquals(0, $this->pc->getCount(null, null));
+		$this->assertEquals(0, $this->pc->getCount($this->u->getType(), array("id" => " ")));
+		$this->assertEquals(1, $this->pc->getCount($this->u->getType(), array("id" => $this->u->getId())));
+		$this->assertTrue($this->pc->getCount(null, array("type" => $this->u->getType())) > 1);
 	}
 
-	private function time() {
-		return round(microtime(true) * 1000);
+	public function testLinks() {
+		$this->assertNotNull($this->pc->link($this->u, $this->t->getId()));
+		$this->assertNotNull($this->pc->link($this->u, $this->u2->getId()));
+
+		$this->assertFalse($this->pc->isLinkedToObject($this->u, null));
+		$this->assertTrue($this->pc->isLinkedToObject($this->u, $this->t));
+		$this->assertTrue($this->pc->isLinkedToObject($this->u, $this->u2));
+
+		sleep(1);
+
+		$this->assertEquals(1, sizeof($this->pc->getLinkedObjects($this->u, "tag")));
+		$this->assertEquals(1, sizeof($this->pc->getLinkedObjects($this->u, "sysprop")));
+
+		$this->assertEquals(0, $this->pc->countLinks($this->u, null));
+		$this->assertEquals(1, $this->pc->countLinks($this->u, "tag"));
+		$this->assertEquals(1, $this->pc->countLinks($this->u, "sysprop"));
+
+		$this->pc->unlinkAll($this->u);
+
+		$this->assertFalse($this->pc->isLinkedToObject($this->u, $this->t));
+		$this->assertFalse($this->pc->isLinkedToObject($this->u, $this->u2));
 	}
+
+	public function testUtils() {
+		$id1 = $this->pc->newId();
+		$id2 = $this->pc->newId();
+		$this->assertNotNull($id1);
+		$this->assertFalse(empty($id1));
+		$this->assertNotEquals($id1, $id2);
+
+		$ts = $this->pc->getTimestamp();
+		$this->assertNotNull($ts);
+		$this->assertNotEquals(0, $ts);
+
+		$date1 = $this->pc->formatDate("MM dd yyyy", "US");
+		var_dump($date1);
+		$date2 = date("m d Y");
+		$this->assertEquals($date1, $date2);
+
+		$ns1 = $this->pc->noSpaces(" test  123		test ", "");
+		$this->assertEquals($ns1, "test123test");
+
+		$st1 = $this->pc->stripAndTrim(" %^&*( cool )		@!");
+		$this->assertEquals($st1, "cool");
+
+		$md1 = $this->pc->markdownToHtml("#hello **test**");
+		$this->assertEquals($md1, "<h1>hello <strong>test</strong></h1>\n");
+
+		$ht1 = $this->pc->approximately(15000);
+		$this->assertEquals($ht1, "15s");
+	}
+
+	public function testMisc() {
+		$kittenType = "kitten";
+		//$cred = $this->pc->setup();
+		//$this->assertFalse($cred->containsKey("accessKey"));
+
+		$types = $this->pc->types();
+		$this->assertFalse(empty($types));
+		$this->assertTrue(array_key_exists("users", $types));
+
+		$constraints = $this->pc->validationConstraints();
+		$this->assertFalse(empty($constraints));
+		$this->assertTrue(array_key_exists("app", $constraints));
+		$this->assertTrue(array_key_exists("user", $constraints));
+
+		$constraint = $this->pc->validationConstraints("app");
+		$this->assertFalse(empty($constraint));
+		$this->assertTrue(array_key_exists("App", $constraint));
+		$this->assertEquals(1, sizeof($constraint));
+
+
+		$this->pc->addValidationConstraint($kittenType, "paws", Constraint::required());
+		$constraint = $this->pc->validationConstraints($kittenType);
+		$this->assertTrue(array_key_exists("paws", $constraint[ucfirst($kittenType)]));
+
+		$ct = new ParaObject("felix");
+		$ct->setType($kittenType);
+		$ct2 = null;
+		try {
+			// validation fails
+			$ct2 = $this->pc->create($ct);
+		} catch (\Exception $e) {}
+
+		$this->assertNull($ct2);
+		$ct->paws = "4";
+		$this->assertNotNull($this->pc->create($ct));
+
+		$this->pc->removeValidationConstraint($kittenType, "paws", "required");
+		$constraint = $this->pc->validationConstraints($kittenType);
+		$this->assertFalse(empty($constraint[ucfirst($kittenType)]));
+	}
+
+	//public function testTimestamp() {
+	//	$this->assertGreaterThan(0, $this->pc->getTimestamp());
+	//}
+
+	//private function time() {
+	//	return round(microtime(true) * 1000);
+	//}
 }

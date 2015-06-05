@@ -18,6 +18,7 @@
  * For issues and patches go to: https://github.com/erudika
  */
 
+require_once 'src/Para/Constraint.php';
 require_once 'src/Para/Pager.php';
-require_once 'src/Para/ParaClient.php';
 require_once 'src/Para/ParaObject.php';
+require_once 'src/Para/ParaClient.php';

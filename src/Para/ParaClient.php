@@ -22,6 +22,7 @@ namespace Para;
 
 use Para\ParaObject;
 use Para\Pager;
+use Para\Constraint;
 use Guzzle\Http\Client;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\QueryAggregator\DuplicateAggregator;
@@ -110,7 +111,11 @@ class ParaClient {
 			$code = $res->getStatusCode();
 			if ($code === 200 || $code === 201 || $code === 304) {
 				if ($returnArray) {
-					return $res->json();
+					try {
+						return $res->json();
+					} catch (\Exception $exc) {
+						return $res->getBody(true);
+					}
 				} else {
 					$obj = new ParaObject();
 					$obj->setFields($res->json());
@@ -170,7 +175,7 @@ class ParaClient {
 		if ($params != null) {
 			$query = $req->getQuery();
 			foreach ($params as $key => $value) {
-				if (is_array($value)) {
+				if (is_array($value) && !empty($value)) {
 					// no spec on this case, so choose first param in array
 					$query->add($key, $value[0]);
 					$truncatedParams = true;
@@ -224,8 +229,8 @@ class ParaClient {
 	}
 
 	private function getItems($result, Pager $pager = null) {
-		if ($result != null && isset($result["items"])) {
-			if ($pager !== null && isset($result["totalHits"])) {
+		if ($result != null && array_key_exists("items", $result)) {
+			if ($pager !== null && array_key_exists("totalHits", $result)) {
 				$pager->count = $result["totalHits"];
 			}
 			return $this->getItemsFromList($result["items"]);
@@ -515,7 +520,7 @@ class ParaClient {
 	 * @return a list of objects found
 	 */
 	public function findTerms($type, $terms = array(), $matchAll = true, Pager $pager = null) {
-		if (terms == null) {
+		if ($terms == null) {
 			return array();
 		}
 		$params = array();
@@ -558,6 +563,9 @@ class ParaClient {
 	 * @return the number of results found
 	 */
 	public function getCount($type, $terms = array()) {
+		if ($terms === null) {
+			return 0;
+		}
 		$params = array();
 		$pager = new Pager();
 		if (empty($terms)) {
@@ -581,7 +589,7 @@ class ParaClient {
 		}
 	}
 
-	private function find($queryType, $params = array()) {
+	private function find($queryType = null, $params = array()) {
 		$map = array();
 		if (!empty($params)) {
 			$qType = ($queryType == null) ? "" : "/".$queryType;
@@ -639,6 +647,7 @@ class ParaClient {
 	 */
 	public function isLinked(ParaObject $obj = null, $type2 = null, $id2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null || $id2 == null) {
+			echo "KUUU";
 			return false;
 		}
 		$url = $obj->getObjectURI()."/links/".$type2."/".$id2;
@@ -700,7 +709,7 @@ class ParaClient {
 			return;
 		}
 		$url = $obj->getObjectURI()."/links";
-		$obj->getObjectURI().invokeDelete($url);
+		$this->invokeDelete($url);
 	}
 
 	/**
@@ -791,7 +800,7 @@ class ParaClient {
 	 * @param loc the locale instance
 	 * @return a formatted date
 	 */
-	public function formatDate($format = "", $loc = "") {
+	public function formatDate($format = "", $loc = null) {
 		$params = array("format" => $format,	"locale" => $loc);
 		return $this->getEntity($this->invokeGet("utils/formatdate", $params));
 	}
@@ -882,8 +891,8 @@ class ParaClient {
 	 * @param c the constraint
 	 * @return a map containing all validation constraints for this type.
 	 */
-	public function addValidationConstraint($type, $field, $c) {
-		return $this->getEntity($this->invokePut("_constraints/".$type."/".$field."/".$c->getName(), $c->payload));
+	public function addValidationConstraint($type, $field, Constraint $c) {
+		return $this->getEntity($this->invokePut("_constraints/".$type."/".$field."/".$c->getName(), $c->getPayload()));
 	}
 
 	/**
