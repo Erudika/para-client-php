@@ -91,7 +91,7 @@ class ParaClient {
 		if (empty($this->path)) {
 			return self::DEFAULT_PATH;
 		} else {
-			if ($this->path[strlen($this->path) - 1] === '/') {
+			if ($this->path[strlen($this->path) - 1] !== '/') {
 				$this->path += '/';
 			}
 			return $this->path;
