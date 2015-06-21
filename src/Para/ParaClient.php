@@ -99,7 +99,7 @@ class ParaClient {
 	}
 
 	/**
-	 * Returns the {@link App} for the current access key (appid).
+	 * Returns the App for the current access key (appid).
 	 * @return the App object
 	 */
 	public function getApp() {
@@ -355,7 +355,7 @@ class ParaClient {
 	 * Returns a list all objects found for the given type.
 	 * The result is paginated so only one page of items is returned, at a time.
 	 * @param type the type of objects to search for
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of objects
 	 */
 	public function listObjects($type = null, Pager $pager = null) {
@@ -393,13 +393,13 @@ class ParaClient {
 	}
 
 	/**
-	 * Search for {@link com.erudika.para.core.Address} objects in a radius of X km from a given point.
+	 * Search for Address objects in a radius of X km from a given point.
 	 * @param type the type of object to search for. @see ParaObject::getType()
 	 * @param query the query string
 	 * @param radius the radius of the search circle
 	 * @param lat latitude
 	 * @param lng longitude
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of objects found
 	 */
 	public function findNearby($type, $query, $radius, $lat, $lng, Pager $pager = null) {
@@ -417,7 +417,7 @@ class ParaClient {
 	 * @param type the type of object to search for. @see ParaObject::getType()
 	 * @param field the property name of an object
 	 * @param prefix the prefix
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of objects found
 	 */
 	public function findPrefix($type, $field, $prefix, Pager $pager = null) {
@@ -433,7 +433,7 @@ class ParaClient {
 	 * Simple query string search. This is the basic search method.
 	 * @param type the type of object to search for. @see ParaObject::getType()
 	 * @param query the query string
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of objects found
 	 */
 	public function findQuery($type, $query, Pager $pager = null) {
@@ -450,7 +450,7 @@ class ParaClient {
 	 * @param filterKey exclude an object with this key from the results (optional)
 	 * @param fields a list of property names
 	 * @param liketext text to compare to
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of objects found
 	 */
 	public function findSimilar($type, $filterKey, $fields, $liketext, Pager $pager = null) {
@@ -468,7 +468,7 @@ class ParaClient {
 	 *
 	 * @param type the type of object to search for. @see ParaObject::getType()
 	 * @param tags the list of tags
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of objects found
 	 */
 	public function findTagged($type, $tags, Pager $pager = null) {
@@ -480,11 +480,11 @@ class ParaClient {
 	}
 
 	/**
-	 * Searches for {@link com.erudika.para.core.Tag} objects.
+	 * Searches for Tag objects.
 	 * This method might be deprecated in the future.
 	 *
 	 * @param keyword the tag keyword to search for
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of objects found
 	 */
 	public function findTags($keyword = null, Pager $pager = null) {
@@ -498,7 +498,7 @@ class ParaClient {
 	 * @param type the type of object to search for. @see ParaObject::getType()
 	 * @param field the property name of an object
 	 * @param terms a list of terms (property values)
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of objects found
 	 */
 	public function findTermInList($type, $field, $terms, Pager $pager = null) {
@@ -516,7 +516,7 @@ class ParaClient {
 	 * @param type the type of object to search for. @see ParaObject::getType()
 	 * @param terms a map of fields (property names) to terms (property values)
 	 * @param matchAll match all terms. If true - AND search, if false - OR search
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of objects found
 	 */
 	public function findTerms($type, $terms = array(), $matchAll = true, Pager $pager = null) {
@@ -544,7 +544,7 @@ class ParaClient {
 	 * @param type the type of object to search for. @see ParaObject::getType()
 	 * @param field the property name of an object
 	 * @param wildcard wildcard query string. For example "cat*".
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of objects found
 	 */
 	public function findWildcard($type, $field, $wildcard = "*", Pager $pager = null) {
@@ -627,7 +627,7 @@ class ParaClient {
 	 * Returns all objects linked to the given one. Only applicable to many-to-many relationships.
 	 * @param type2 type of linked objects to search for
 	 * @param obj the object to execute this method on
-	 * @param pager a @link Pager
+	 * @param pager a Pager
 	 * @return a list of linked objects
 	 */
 	public function getLinkedObjects(ParaObject $obj = null, $type2 = null, Pager $pager = null) {
@@ -647,7 +647,6 @@ class ParaClient {
 	 */
 	public function isLinked(ParaObject $obj = null, $type2 = null, $id2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null || $id2 == null) {
-			echo "KUUU";
 			return false;
 		}
 		$url = $obj->getObjectURI()."/links/".$type2."/".$id2;
@@ -668,12 +667,10 @@ class ParaClient {
 	}
 
 	/**
-	 * Links an object to this one in a many-to-many relationship.
-	 * Only a link is created. Objects are left untouched.
-	 * The type of the second object is automatically determined on read.
+	 *
 	 * @param id2 link to the object with this id
 	 * @param obj the object to execute this method on
-	 * @return the id of the {@link com.erudika.para.core.Linker} object that is created
+	 * @return the id of the Linker object that is created
 	 */
 	public function link(ParaObject $obj = null, $id2 = null) {
 		if ($obj == null || $obj->getId() == null || $id2 == null) {
@@ -701,7 +698,7 @@ class ParaClient {
 	/**
 	 * Unlinks all objects that are linked to this one.
 	 * @param obj the object to execute this method on
-	 * Deletes all {@link com.erudika.para.core.Linker} objects.
+	 * Deletes all Linker objects.
 	 * Only the links are deleted. Objects are left untouched.
 	 */
 	public function unlinkAll(ParaObject $obj = null) {
@@ -737,8 +734,8 @@ class ParaClient {
 	 * @param field the field name to use as filter
 	 * @param term the field value to use as filter
 	 * @param obj the object to execute this method on
-	 * @param pager a @link Pager
-	 * @return a list of {@link ParaObject} in a one-to-many relationship with this object
+	 * @param pager a Pager
+	 * @return a list of ParaObject in a one-to-many relationship with this object
 	 */
 	public function getChildren(ParaObject $obj = null, $type2 = null, $field = null, $term = null, Pager $pager = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
@@ -907,8 +904,7 @@ class ParaClient {
 	}
 
 	/**
-	 * Returns a {@link com.erudika.para.core.User} or an
-	 * {@link com.erudika.para.core.App} that is currently authenticated.
+	 * Returns a User or an App that is currently authenticated.
 	 * @return a ParaObject
 	 */
 	public function me() {

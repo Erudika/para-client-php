@@ -33,18 +33,34 @@ class Constraint {
 		$this->payload = $payload;
 	}
 
+	/**
+	 * The constraint name.
+	 * @return a name
+	 */
 	function getName() {
 		return $this->name;
 	}
 
-	function getPayload() {
-		return $this->payload;
-	}
-
+	/**
+	 * Sets the name of the constraint.
+	 * @param name a name
+	 */
 	function setName($name) {
 		$this->name = $name;
 	}
 
+	/**
+	 * The payload (a map)
+	 * @return a map
+	 */
+	function getPayload() {
+		return $this->payload;
+	}
+
+	/**
+	 * Sets the payload.
+	 * @param payload a map
+	 */
 	function setPayload($payload) {
 		$this->payload = $payload;
 	}
@@ -82,7 +98,7 @@ class Constraint {
 	}
 
 	/**
-	 * The 'size' constraint - field must be a {@link String}, {@link Map}, {@link Collection} or array
+	 * The 'size' constraint - field must be a String, Object or Array
 	 * with a given minimum and maximum length.
 	 * @param min the minimum length
 	 * @param max the maximum length
@@ -97,7 +113,7 @@ class Constraint {
 	}
 
 	/**
-	 * The 'digits' constraint - field must be a {@link Number} or {@link String} containing digits where the
+	 * The 'digits' constraint - field must be a Number or String containing digits where the
 	 * number of digits in the integral part is limited by 'integer', and the
 	 * number of digits for the fractional part is limited
 	 * by 'fraction'.
@@ -150,7 +166,7 @@ class Constraint {
 	}
 
 	/**
-	 * The 'future' constraint - field value must be a {@link Date} or a timestamp in the future.
+	 * The 'future' constraint - field value must be a Date or a timestamp in the future.
 	 * @return constraint
 	 */
 	public static function future() {
@@ -158,7 +174,7 @@ class Constraint {
 	}
 
 	/**
-	 * The 'past' constraint - field value must be a {@link Date} or a timestamp in the past.
+	 * The 'past' constraint - field value must be a Date or a timestamp in the past.
 	 * @return constraint
 	 */
 	public static function past() {
