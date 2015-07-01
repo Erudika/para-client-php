@@ -46,7 +46,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 	protected $a2;
 
 	protected function setUp() {
-		$this->pc = new ParaClient("app:my-app", "z0bdc25x8d0RjtzO7GehIYTbHkVq/QWSGXXRNtQHTMpG+rMjenjSzg==");
+		$this->pc = new ParaClient("app:para", "6P8uwMgxnUQplN0MU0Uc0KEUgL1iy2RACZd3SLjZhGH/T9q7JxoxfA==");
 		$this->pc->setEndpoint("http://localhost:8080");
 		if($this->pc->me() == null) {
 			throw new \Exception("Local Para server must be started before testing.");
@@ -145,7 +145,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 			$s->setType(self::dogsType);
 			$s->foo = "bark!";
 			$dogs[$i] = $s;
-		}
+			}
 
 		$this->assertTrue(empty($this->pc->createAll(null)));
 		$l1 = $this->pc->createAll($dogs);
@@ -378,7 +378,6 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 		$this->assertNotEquals(0, $ts);
 
 		$date1 = $this->pc->formatDate("MM dd yyyy", "US");
-		var_dump($date1);
 		$date2 = date("m d Y");
 		$this->assertEquals($date1, $date2);
 
@@ -436,11 +435,4 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 		$this->assertFalse(empty($constraint[ucfirst($kittenType)]));
 	}
 
-	//public function testTimestamp() {
-	//	$this->assertGreaterThan(0, $this->pc->getTimestamp());
-	//}
-
-	//private function time() {
-	//	return round(microtime(true) * 1000);
-	//}
 }
