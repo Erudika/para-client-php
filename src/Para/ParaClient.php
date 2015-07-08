@@ -156,6 +156,11 @@ class ParaClient {
 						$this->getFullPath($resourcePath), null, null, empty($entity) ? null : json_encode($entity));
 	}
 
+	private function invokePatch($resourcePath = '/', $entity = array()) {
+		return $this->invokeSignedRequest("PATCH", $this->getEndpoint(),
+						$this->getFullPath($resourcePath), null, null, empty($entity) ? null : json_encode($entity));
+	}
+
 	private function invokeDelete($resourcePath = '/', $params = array()) {
 		return $this->invokeSignedRequest("DELETE", $this->getEndpoint(),
 						$this->getFullPath($resourcePath), null, $params);
@@ -243,7 +248,9 @@ class ParaClient {
 	/////////////////////////////////////////////
 
 	/**
-	 * Persists an object to the data store.
+	 * Persists an object to the data store. If the object's type and id are given,
+	 * then the request will be a {@code PUT} request and any existing object will be
+	 * overwritten.
 	 * @param obj the domain object
 	 * @return the same object with assigned id or null if not created.
 	 */
@@ -251,7 +258,11 @@ class ParaClient {
 		if ($obj == null) {
 			return null;
 		}
-		return $this->getEntity($this->invokePost($obj->getType(), $obj->jsonSerialize()), false);
+		if ($obj->getId() == null || $obj->getType() == null) {
+			return $this->getEntity($this->invokePost($obj->getType(), $obj->jsonSerialize()), false);
+		} else {
+			return $this->getEntity($this->invokePut($obj->getType()."/".$obj->getId(), $obj->jsonSerialize()), false);
+		}
 	}
 
 	/**
@@ -272,7 +283,7 @@ class ParaClient {
 	}
 
 	/**
-	 * Updates an object permanently.
+	 * Updates an object permanently. Supports partial updates.
 	 * @param obj the object to update
 	 * @return the updated object
 	 */
@@ -280,7 +291,7 @@ class ParaClient {
 		if ($obj == null) {
 			return null;
 		}
-		return $this->getEntity($this->invokePut($obj->getObjectURI(), $obj->jsonSerialize()), false);
+		return $this->getEntity($this->invokePatch($obj->getObjectURI(), $obj->jsonSerialize()), false);
 	}
 
 	/**
@@ -335,7 +346,7 @@ class ParaClient {
 		foreach ($objects as $key => $value) {
 			$objects[$key] = ($value == null) ? null : $value->jsonSerialize();
 		}
-		return $this->getItemsFromList($this->getEntity($this->invokePut("_batch", $objects)));
+		return $this->getItemsFromList($this->getEntity($this->invokePatch("_batch", $objects)));
 	}
 
 	/**
