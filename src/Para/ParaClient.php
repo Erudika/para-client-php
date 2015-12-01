@@ -38,6 +38,8 @@ class ParaClient {
 
 	const DEFAULT_ENDPOINT = "https://paraio.com";
 	const DEFAULT_PATH = "/v1/";
+	const JWT_PATH = "/jwt_auth";
+	const JWT_REFRESH_INTERVAL_SEC = 60;
 	const SEPARATOR = ":";
 
 	private $apiClient;
@@ -45,8 +47,14 @@ class ParaClient {
 	private $path;
 	private $accessKey;
 	private $secretKey;
+	private $tokenKey;
+	private $tokenKeyExpires;
+	private $tokenKeyLastRefresh;
 
 	public function __construct($accessKey = null, $secretKey = null) {
+		if (strlen($secretKey) < 6)  {
+			trigger_error("Secret key appears to be invalid. Make sure you call 'signIn()' first.", E_USER_WARNING);
+		}
 		$this->accessKey = $accessKey;
 		$this->secretKey = $secretKey;
 		$this->apiClient = new Client();
@@ -57,7 +65,7 @@ class ParaClient {
 
 	/**
 	 * Sets the API endpoint URL
-	 * @param endpoint URL
+	 * @param String endpoint URL
 	 */
 	public function setEndpoint($endpoint) {
 		$this->endpoint = $endpoint;
@@ -85,7 +93,7 @@ class ParaClient {
 
 	/**
 	 * Returns the API request path
-	 * @return the request path without parameters
+	 * @return String the request path without parameters
 	 */
 	public function getApiPath() {
 		if (empty($this->path)) {
@@ -100,10 +108,37 @@ class ParaClient {
 
 	/**
 	 * Returns the App for the current access key (appid).
-	 * @return the App object
+	 * @return ParaObject the App object
 	 */
 	public function getApp() {
 		return $this->me();
+	}
+
+	/**
+	 * @return String returns the JWT access token, or null if not signed in
+	 */
+	public function getAccessToken() {
+		return tokenKey;
+	}
+
+	/**
+	 * Clears the JWT token from memory, if such exists.
+	 */
+	private function clearAccessToken() {
+		$this->tokenKey = null;
+		$this->tokenKeyExpires = null;
+		$this->tokenKeyLastRefresh = null;
+	}
+
+	/**
+	 * @return String returns either the secret key or the JWT token if it is set
+	 */
+	private function key() {
+		if ($this->tokenKey != null) {
+			refreshToken();
+			return "Bearer ".$this->tokenKey;
+		}
+		return secretKey;
 	}
 
 	private function getEntity(Response $res = null, $returnArray = true) {
@@ -133,6 +168,9 @@ class ParaClient {
 	}
 
 	private function getFullPath($resourcePath) {
+		if (isset($resourcePath) && strncmp($resourcePath, self::JWT_PATH, strlen(self::JWT_PATH)) == 0) {
+			return $resourcePath;
+		}
 		if (!isset($resourcePath)) {
 			$resourcePath = '';
 		} elseif ($resourcePath[0] === '/') {
@@ -169,8 +207,9 @@ class ParaClient {
 	private function invokeSignedRequest($httpMethod, $endpointURL, $reqPath,
 					$headers = array(), $params = array(), $jsonEntity = null) {
 
-		if ($this->accessKey == null || $this->secretKey == null) {
-			throw new \Exception("Security credentials are invalid.");
+		if ($this->accessKey == null || ($this->secretKey == null && $this->tokenKey == null)) {
+			error_log("Security credentials are invalid.", 0);
+			return null;
 		}
 		$sig = new SignatureV4("para");
 		$req = $this->apiClient->createRequest($httpMethod, $endpointURL . $reqPath);
@@ -192,7 +231,7 @@ class ParaClient {
 		if ($jsonEntity != null) {
 			$req->setBody($jsonEntity);
 		}
-		$sig->signRequest($req, new Credentials($this->accessKey, $this->secretKey));
+		$sig->signRequest($req, new Credentials($this->accessKey, $this->key()));
 		if ($truncatedParams) {
 			$req->getQuery()->overwriteWith($params);
 		}
@@ -252,7 +291,7 @@ class ParaClient {
 	 * then the request will be a {@code PUT} request and any existing object will be
 	 * overwritten.
 	 * @param obj the domain object
-	 * @return the same object with assigned id or null if not created.
+	 * @return ParaObject the same object with assigned id or null if not created.
 	 */
 	public function create(ParaObject $obj = null) {
 		if ($obj == null) {
@@ -269,7 +308,7 @@ class ParaClient {
 	 * Retrieves an object from the data store.
 	 * @param type the type of the object
 	 * @param id the id of the object
-	 * @return the retrieved object or null if not found
+	 * @return ParaObject the retrieved object or null if not found
 	 */
 	public function read($type = null, $id = null) {
 		if ($id == null) {
@@ -308,7 +347,7 @@ class ParaClient {
 	/**
 	 * Saves multiple objects to the data store.
 	 * @param objects the list of objects to save
-	 * @return a list of objects
+	 * @return Array a list of objects
 	 */
 	public function createAll($objects = array()) {
 		if ($objects == null || $objects[0] == null) {
@@ -323,7 +362,7 @@ class ParaClient {
 	/**
 	 * Retrieves multiple objects from the data store.
 	 * @param keys a list of object ids
-	 * @return a list of objects
+	 * @return Array a list of objects
 	 */
 	public function readAll($keys = array()) {
 		if ($keys == null) {
@@ -337,7 +376,7 @@ class ParaClient {
 	/**
 	 * Updates multiple objects.
 	 * @param objects the objects to update
-	 * @return a list of objects
+	 * @return Array a list of objects
 	 */
 	public function updateAll($objects = array()) {
 		if ($objects == null) {
@@ -367,7 +406,7 @@ class ParaClient {
 	 * The result is paginated so only one page of items is returned, at a time.
 	 * @param type the type of objects to search for
 	 * @param pager a Pager
-	 * @return a list of objects
+	 * @return Array a list of objects
 	 */
 	public function listObjects($type = null, Pager $pager = null) {
 		if ($type == null) {
@@ -383,7 +422,7 @@ class ParaClient {
 	/**
 	 * Simple id search.
 	 * @param id the id
-	 * @return the object if found or null
+	 * @return ParaObject the object if found or null
 	 */
 	public function findById($id) {
 		$params = array();
@@ -395,7 +434,7 @@ class ParaClient {
 	/**
 	 * Simple multi id search.
 	 * @param ids a list of ids to search for
-	 * @return the object if found or null
+	 * @return ParaObject the object if found or null
 	 */
 	public function findByIds($ids = array()) {
 		$params = array();
@@ -411,7 +450,7 @@ class ParaClient {
 	 * @param lat latitude
 	 * @param lng longitude
 	 * @param pager a Pager
-	 * @return a list of objects found
+	 * @return Array a list of objects found
 	 */
 	public function findNearby($type, $query, $radius, $lat, $lng, Pager $pager = null) {
 		$params = array();
@@ -429,7 +468,7 @@ class ParaClient {
 	 * @param field the property name of an object
 	 * @param prefix the prefix
 	 * @param pager a Pager
-	 * @return a list of objects found
+	 * @return Array a list of objects found
 	 */
 	public function findPrefix($type, $field, $prefix, Pager $pager = null) {
 		$params = array();
@@ -445,7 +484,7 @@ class ParaClient {
 	 * @param type the type of object to search for. @see ParaObject::getType()
 	 * @param query the query string
 	 * @param pager a Pager
-	 * @return a list of objects found
+	 * @return Array a list of objects found
 	 */
 	public function findQuery($type, $query, Pager $pager = null) {
 		$params = array();
@@ -462,7 +501,7 @@ class ParaClient {
 	 * @param fields a list of property names
 	 * @param liketext text to compare to
 	 * @param pager a Pager
-	 * @return a list of objects found
+	 * @return Array a list of objects found
 	 */
 	public function findSimilar($type, $filterKey, $fields, $liketext, Pager $pager = null) {
 		$params = array();
@@ -480,7 +519,7 @@ class ParaClient {
 	 * @param type the type of object to search for. @see ParaObject::getType()
 	 * @param tags the list of tags
 	 * @param pager a Pager
-	 * @return a list of objects found
+	 * @return Array a list of objects found
 	 */
 	public function findTagged($type, $tags, Pager $pager = null) {
 		$params = array();
@@ -496,7 +535,7 @@ class ParaClient {
 	 *
 	 * @param keyword the tag keyword to search for
 	 * @param pager a Pager
-	 * @return a list of objects found
+	 * @return Array a list of objects found
 	 */
 	public function findTags($keyword = null, Pager $pager = null) {
 		$keyword = ($keyword == null) ? "*" : $keyword."*";
@@ -510,7 +549,7 @@ class ParaClient {
 	 * @param field the property name of an object
 	 * @param terms a list of terms (property values)
 	 * @param pager a Pager
-	 * @return a list of objects found
+	 * @return Array a list of objects found
 	 */
 	public function findTermInList($type, $field, $terms, Pager $pager = null) {
 		$params = array();
@@ -528,7 +567,7 @@ class ParaClient {
 	 * @param terms a map of fields (property names) to terms (property values)
 	 * @param matchAll match all terms. If true - AND search, if false - OR search
 	 * @param pager a Pager
-	 * @return a list of objects found
+	 * @return Array a list of objects found
 	 */
 	public function findTerms($type, $terms = array(), $matchAll = true, Pager $pager = null) {
 		if ($terms == null) {
@@ -556,7 +595,7 @@ class ParaClient {
 	 * @param field the property name of an object
 	 * @param wildcard wildcard query string. For example "cat*".
 	 * @param pager a Pager
-	 * @return a list of objects found
+	 * @return Array a list of objects found
 	 */
 	public function findWildcard($type, $field, $wildcard = "*", Pager $pager = null) {
 		$params = array();
@@ -571,7 +610,7 @@ class ParaClient {
 	 * Counts indexed objects matching a set of terms/values.
 	 * @param type the type of object to search for. @see ParaObject::getType()
 	 * @param terms a list of terms (property values)
-	 * @return the number of results found
+	 * @return Integer the number of results found
 	 */
 	public function getCount($type, $terms = array()) {
 		if ($terms === null) {
@@ -620,7 +659,7 @@ class ParaClient {
 	 * Count the total number of links between this object and another type of object.
 	 * @param type2 the other type of object
 	 * @param obj the object to execute this method on
-	 * @return the number of links for the given object
+	 * @return Integer the number of links for the given object
 	 */
 	public function countLinks(ParaObject $obj = null, $type2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
@@ -639,7 +678,7 @@ class ParaClient {
 	 * @param type2 type of linked objects to search for
 	 * @param obj the object to execute this method on
 	 * @param pager a Pager
-	 * @return a list of linked objects
+	 * @return Array a list of linked objects
 	 */
 	public function getLinkedObjects(ParaObject $obj = null, $type2 = null, Pager $pager = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
@@ -654,7 +693,7 @@ class ParaClient {
 	 * @param type2 the other type
 	 * @param id2 the other id
 	 * @param obj the object to execute this method on
-	 * @return true if the two are linked
+	 * @return Bool true if the two are linked
 	 */
 	public function isLinked(ParaObject $obj = null, $type2 = null, $id2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null || $id2 == null) {
@@ -668,7 +707,7 @@ class ParaClient {
 	 * Checks if a given object is linked to this one.
 	 * @param toObj the other object
 	 * @param obj the object to execute this method on
-	 * @return true if linked
+	 * @return Bool true if linked
 	 */
 	public function isLinkedToObject(ParaObject $obj = null, ParaObject $toObj = null) {
 		if ($obj == null || $obj->getId() == null || $toObj == null || $toObj->getId() == null) {
@@ -681,7 +720,7 @@ class ParaClient {
 	 *
 	 * @param id2 link to the object with this id
 	 * @param obj the object to execute this method on
-	 * @return the id of the Linker object that is created
+	 * @return String the id of the Linker object that is created
 	 */
 	public function link(ParaObject $obj = null, $id2 = null) {
 		if ($obj == null || $obj->getId() == null || $id2 == null) {
@@ -724,7 +763,7 @@ class ParaClient {
 	 * Count the total number of child objects for this object.
 	 * @param type2 the type of the other object
 	 * @param obj the object to execute this method on
-	 * @return the number of links
+	 * @return Integer the number of links
 	 */
 	public function countChildren(ParaObject $obj = null, $type2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
@@ -746,7 +785,7 @@ class ParaClient {
 	 * @param term the field value to use as filter
 	 * @param obj the object to execute this method on
 	 * @param pager a Pager
-	 * @return a list of ParaObject in a one-to-many relationship with this object
+	 * @return Array a list of ParaObject in a one-to-many relationship with this object
 	 */
 	public function getChildren(ParaObject $obj = null, $type2 = null, $field = null, $term = null, Pager $pager = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
@@ -786,7 +825,7 @@ class ParaClient {
 
 	/**
 	 * Generates a new unique id.
-	 * @return a new id
+	 * @return String a new id
 	 */
 	public function newId() {
 		$res = $this->getEntity($this->invokeGet("utils/newid"));
@@ -795,7 +834,7 @@ class ParaClient {
 
 	/**
 	 * Returns the current timestamp.
-	 * @return a long number
+	 * @return String a long number
 	 */
 	public function getTimestamp() {
 		$res = $this->getEntity($this->invokeGet("utils/timestamp"));
@@ -806,7 +845,7 @@ class ParaClient {
 	 * Formats a date in a specific format.
 	 * @param format the date format
 	 * @param loc the locale instance
-	 * @return a formatted date
+	 * @return String a formatted date
 	 */
 	public function formatDate($format = "", $loc = null) {
 		$params = array("format" => $format,	"locale" => $loc);
@@ -817,7 +856,7 @@ class ParaClient {
 	 * Converts spaces to dashes.
 	 * @param str a string with spaces
 	 * @param replaceWith a string to replace spaces with
-	 * @return a string with dashes
+	 * @return String a string with dashes
 	 */
 	public function noSpaces($str = "", $replaceWith = "") {
 		$params = array("string" => $str,	"replacement" => $replaceWith);
@@ -827,7 +866,7 @@ class ParaClient {
 	/**
 	 * Strips all symbols, punctuation, whitespace and control chars from a string.
 	 * @param str a dirty string
-	 * @return a clean string
+	 * @return String a clean string
 	 */
 	public function stripAndTrim($str = "") {
 		$params = array("string" => $str);
@@ -837,7 +876,7 @@ class ParaClient {
 	/**
 	 * Converts Markdown to HTML
 	 * @param markdown$Markdown
-	 * @return HTML
+	 * @return String HTML
 	 */
 	public function markdownToHtml($markdownString = "") {
 		$params = array("md" => $markdownString);
@@ -847,7 +886,7 @@ class ParaClient {
 	/**
 	 * Returns the number of minutes, hours, months elapsed for a time delta (milliseconds).
 	 * @param delta the time delta between two events, in milliseconds
-	 * @return a string like "5m", "1h"
+	 * @return String a string like "5m", "1h"
 	 */
 	public function approximately($delta = "") {
 		$params = array("delta" => $delta);
@@ -860,7 +899,7 @@ class ParaClient {
 
 	/**
 	 * First-time setup - creates the root app and returns its credentials.
-	 * @return a map of credentials
+	 * @return Array a map of credentials
 	 */
 	protected function setup() {
 		return $this->getEntity($this->invokeGet("_setup"));
@@ -869,24 +908,40 @@ class ParaClient {
 	/**
 	 * Generates a new set of access/secret keys.
 	 * Old keys are discarded and invalid after this.
-	 * @return a map of new credentials
+	 * @return Array a map of new credentials
 	 */
 	public function newKeys() {
-		return $this->getEntity($this->invokePost("_newkeys"));
+		$keys = $this->getEntity($this->invokePost("_newkeys"));
+		if ($keys != null && array_key_exists("secretKey", $keys)) {
+			$this->secretKey = $keys["secretKey"];
+		}
+		return $keys;
 	}
 
 	/**
 	 * Returns all registered types for this App.
-	 * @return a map of plural-singular form of all the registered types.
+	 * @return Array a map of plural-singular form of all the registered types.
 	 */
 	public function types() {
 		return $this->getEntity($this->invokeGet("_types"));
 	}
 
 	/**
+	 * Returns a User or an App that is currently authenticated.
+	 * @return ParaObject User or App
+	 */
+	public function me() {
+		return $this->getEntity($this->invokeGet("_me"), false);
+	}
+
+	/////////////////////////////////////////////
+	//			Validation Constraints
+	/////////////////////////////////////////////
+
+	/**
 	 * Returns the validation constraints map.
 	 * @param type a type
-	 * @return a map containing all validation constraints.
+	 * @return Array a map containing all validation constraints.
 	 */
 	public function validationConstraints($type = "") {
 		return $this->getEntity($this->invokeGet("_constraints/".$type));
@@ -897,9 +952,12 @@ class ParaClient {
 	 * @param type a type
 	 * @param field a field name
 	 * @param c the constraint
-	 * @return a map containing all validation constraints for this type.
+	 * @return Array a map containing all validation constraints for this type.
 	 */
 	public function addValidationConstraint($type, $field, Constraint $c) {
+		if ($type == null || $field == null || $c == null) {
+			return array();
+		}
 		return $this->getEntity($this->invokePut("_constraints/".$type."/".$field."/".$c->getName(), $c->getPayload()));
 	}
 
@@ -908,18 +966,170 @@ class ParaClient {
 	 * @param type a type
 	 * @param field a field name
 	 * @param constraintName the name of the constraint to remove
-	 * @return a map containing all validation constraints for this type.
+	 * @return Array a map containing all validation constraints for this type.
 	 */
 	public function removeValidationConstraint($type, $field, $constraintName) {
+		if ($type == null || $field == null || $constraintName == null) {
+			return array();
+		}
 		return $this->getEntity($this->invokeDelete("_constraints/".$type."/".$field."/".$constraintName));
 	}
 
+	/////////////////////////////////////////////
+	//			Resource Permissions
+	/////////////////////////////////////////////
+
 	/**
-	 * Returns a User or an App that is currently authenticated.
-	 * @return a ParaObject
+	 * Returns only the permissions for a given subject (user) of the current app.
+	 * If subject is not given returns the permissions for all subjects and resources for current app.
+	 * @param subjectid the subject id (user id)
+	 * @return a map of subject ids to resource names to a list of allowed methods
 	 */
-	public function me() {
-		return $this->getEntity($this->invokeGet("_me"), false);
+	public function resourcePermissions($subjectid = null) {
+		if ($subjectid == null) {
+			return $this->getEntity($this->invokeGet("_permissions"));
+		} else {
+			return $this->getEntity($this->invokeGet("_permissions/".$subjectid));
+		}
+	}
+
+	/**
+	 * Grants a permission to a subject that allows them to call the specified HTTP methods on a given resource.
+	 * @param subjectid subject id (user id)
+	 * @param resourceName resource name or object type
+	 * @param permission a set of HTTP methods
+	 * @return Array a map of the permissions for this subject id
+	 */
+	public function grantResourcePermission($subjectid, $resourceName, AllowedMethods $permission) {
+		if ($subjectid == null || $resourceName == null || $permission == null) {
+			return array();
+		}
+		return $this->getEntity($this->invokePut("_permissions/".$subjectid."/".$resourceName), $permission);
+	}
+
+	/**
+	 * Revokes a permission for a subject, meaning they no longer will be able to access the given resource.
+	 * @param subjectid subject id (user id)
+	 * @param resourceName resource name or object type
+	 * @return Array a map of the permissions for this subject id
+	 */
+	public function revokeResourcePermission($subjectid, $resourceName) {
+		if ($subjectid == null || $resourceName == null) {
+			return array();
+		}
+		return $this->getEntity($this->invokeDelete("_permissions/".$subjectid."/".$resourceName));
+	}
+
+	/**
+	 * Revokes all permission for a subject.
+	 * @param subjectid subject id (user id)
+	 * @return Array a map of the permissions for this subject id
+	 */
+	public function revokeAllResourcePermissions($subjectid) {
+		if ($subjectid == null) {
+			return array();
+		}
+		return $this->getEntity($this->invokeDelete("_permissions/".$subjectid));
+	}
+
+	/**
+	 * Checks if a subject is allowed to call method X on resource Y.
+	 * @param subjectid subject id
+	 * @param resourceName resource name (type)
+	 * @param httpMethod HTTP method name
+	 * @return Bool true if allowed
+	 */
+	public function isAllowedTo($subjectid, $resourceName, $httpMethod) {
+		if ($subjectid == null || $resourceName == null || $httpMethod = null) {
+			return false;
+		}
+		$url = "_permissions/".$subjectid."/".$resourceName."/".$httpMethod;
+		return $this->getEntity($this->invokeGet($url));
+	}
+
+	/////////////////////////////////////////////
+	//				Access Tokens
+	/////////////////////////////////////////////
+
+	/**
+	 * Takes an identity provider access token and fethces the user data from that provider.
+	 * A new {@link  User} object is created if that user doesn't exist.
+	 * Access tokens are returned upon successful authentication using one of the SDKs from
+	 * Facebook, Google, Twitter, etc.
+	 * <b>Note:</b> Twitter uses OAuth 1 and gives you a token and a token secret.
+	 * <b>You must concatenate them like this: <code>{oauth_token}:{oauth_token_secret}</code> and
+	 * use that as the provider access token.</b>
+	 * @param provider identity provider, e.g. 'facebook', 'google'...
+	 * @param providerToken access token from a provider like Facebook, Google, Twitter
+	 * @return ParaObject a User object or null if something failed
+	 */
+	public function signIn($provider, $providerToken) {
+		if ($provider != null && $providerToken != null) {
+			$credentials = array();
+			$credentials["appid"] = $this->accessKey;
+			$credentials["provider"] = $provider;
+			$credentials["token"] = $providerToken;
+			$result = $this->getEntity($this->invokePost(self::JWT_PATH, $credentials));
+			if ($result != null && array_key_exists("user", $result) && array_key_exists("jwt", $result)) {
+				$jwtData = $result["jwt"];
+				$userData = $result["user"];
+				$this->tokenKey = $jwtData["access_token"];
+				$this->tokenKeyExpires = $jwtData["expires"];
+				$obj = new ParaObject();
+				$obj->setFields($userData);
+				return $obj;
+			} else {
+				$this->clearAccessToken();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Clears the JWT access token but token is not revoked.
+	 * Tokens can be revoked globally per user with {@link #revokeAllTokens()}.
+	 */
+	public function signOut() {
+		$this->clearAccessToken();
+	}
+
+	/**
+	 * Refreshes the JWT access token. This requires a valid existing token.
+	 *	Call {@link #signIn(java.lang.String, java.lang.String)} first.
+	 * @return Bool true if token was refreshed
+	 */
+	protected function refreshToken() {
+		$now = round(microtime(true) * 1000);
+		$interval = self::JWT_REFRESH_INTERVAL_SEC * 1000;
+		$notExpired = $this->tokenKeyExpires != null && $this->tokenKeyExpires > $now;
+		$canRefresh = $this->tokenKeyLastRefresh != null &&
+				(($this->tokenKeyLastRefresh + $interval) < $now ||
+						($this->tokenKeyLastRefresh + $interval) > $this->tokenKeyExpires);
+		// token present and NOT expired
+		if ($this->tokenKey != null && $notExpired && $canRefresh) {
+			$result = $this->getEntity($this->invokeGet(self::JWT_PATH));
+			if ($result != null && array_key_exists("user", $result) && array_key_exists("jwt", $result)) {
+				$jwtData = $result["jwt"];
+				$this->tokenKey = $jwtData["access_token"];
+				$this->tokenKeyExpires = $jwtData["expires"];
+				$this->tokenKeyLastRefresh = round(microtime(true) * 1000);
+				return true;
+			} else {
+				$this->clearAccessToken();
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Revokes all user tokens for a given user id.
+	 * This is whould be equivalent to "logout everywhere".
+	 * <b>Note:</b> Generating a new API secret on the server will also invalidate all client tokens.
+	 * Requires a valid existing token.
+	 * @return Bool true if successful
+	 */
+	public function revokeAllTokens() {
+		return $this->getEntity($this->invokeDelete(self::JWT_PATH)) != null;
 	}
 
 }
