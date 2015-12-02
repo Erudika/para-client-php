@@ -131,17 +131,6 @@ class ParaClient {
 		$this->tokenKeyLastRefresh = null;
 	}
 
-	/**
-	 * @return string returns either the secret key or the JWT token if it is set
-	 */
-	private function key() {
-		if ($this->tokenKey != null) {
-			$this->refreshToken();
-			return "Bearer ".$this->tokenKey;
-		}
-		return $this->secretKey;
-	}
-
 	private function getEntity(Response $res = null, $returnArray = true) {
 		if ($res != null) {
 			$code = $res->getStatusCode();
@@ -214,7 +203,6 @@ class ParaClient {
 			error_log("Security credentials are invalid.", 0);
 			return null;
 		}
-		$sig = new SignatureV4("para", "us-east-1");
 		$headers = ($headers == null) ? array() : $headers;
 		$query = array();
 		if ($params != null) {
@@ -227,10 +215,18 @@ class ParaClient {
 				}
 			}
 		}
+		if ($this->tokenKey != null) {
+			$this->refreshToken();
+			$headers["Authorization"] = "Bearer ".$this->tokenKey;
+		}
 		// only sign some of the query parameters
 		$queryString = empty($query) ? "" : "?" . \GuzzleHttp\Psr7\build_query($query);
 		$req = new Request($httpMethod, $endpointURL . $reqPath . $queryString, $headers, $jsonEntity);
-		$req = $sig->signRequest($req, new Credentials($this->accessKey, $this->key()));
+
+		if ($this->tokenKey == null) {
+			$sig = new SignatureV4("para", "us-east-1");
+			$req = $sig->signRequest($req, new Credentials($this->accessKey, $this->secretKey));
+		}
 		// send all query parameters to the server
 		$queryString = ($params == null) ? "" : \GuzzleHttp\Psr7\build_query($params);
 		try {
