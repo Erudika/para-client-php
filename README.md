@@ -2,7 +2,7 @@
 ============================
 
 # PHP Client for Para
-
+[![Packagist](https://img.shields.io/packagist/v/erudika/para-client-php.svg)]()
 
 ## What is this?
 
