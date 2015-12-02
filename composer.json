@@ -1,6 +1,5 @@
 {
   "name": "erudika/para-client-php",
-  "version": "1.17.0",
   "description": "PHP Client for Para",
   "keywords": [
     "para",
