@@ -46,7 +46,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 	protected $a2;
 
 	protected function setUp() {
-		$this->pc = new ParaClient("app:para", "6P8uwMgxnUQplN0MU0Uc0KEUgL1iy2RACZd3SLjZhGH/T9q7JxoxfA==");
+		$this->pc = new ParaClient("app:para", "MDCJWB7IXvocS0PmpXHqWTdwbqfCN3kQWx3LPPM9cXoe0/EjxMjJWQ==");
 		$this->pc->setEndpoint("http://localhost:8080");
 		if($this->pc->me() == null) {
 			throw new \Exception("Local Para server must be started before testing.");
@@ -379,30 +379,33 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 
 		$date1 = $this->pc->formatDate("MM dd yyyy", "US");
 		$date2 = date("m d Y");
-		$this->assertEquals($date1, $date2);
+		$this->assertEquals($date2, $date1);
 
 		$ns1 = $this->pc->noSpaces(" test  123		test ", "");
-		$this->assertEquals($ns1, "test123test");
+		$this->assertEquals("test123test", $ns1);
 
 		$st1 = $this->pc->stripAndTrim(" %^&*( cool )		@!");
-		$this->assertEquals($st1, "cool");
+		$this->assertEquals("cool", $st1);
 
 		$md1 = $this->pc->markdownToHtml("#hello **test**");
-		$this->assertEquals($md1, "<h1>hello <strong>test</strong></h1>\n");
+		$this->assertEquals("<h1>hello <strong>test</strong></h1>\n", $md1);
 
 		$ht1 = $this->pc->approximately(15000);
-		$this->assertEquals($ht1, "15s");
+		$this->assertEquals("15s", $ht1);
 	}
 
 	public function testMisc() {
-		$kittenType = "kitten";
-		//$cred = $this->pc->setup();
-		//$this->assertFalse($cred->containsKey("accessKey"));
-
 		$types = $this->pc->types();
+		$this->assertNotNull($types);
 		$this->assertFalse(empty($types));
 		$this->assertTrue(array_key_exists("users", $types));
 
+		$this->assertEquals("app:para", $this->pc->me()->getId());
+	}
+
+	public function testValidationConstraints() {
+		// Validations
+		$kittenType = "kitten";
 		$constraints = $this->pc->validationConstraints();
 		$this->assertFalse(empty($constraints));
 		$this->assertTrue(array_key_exists("app", $constraints));
@@ -410,13 +413,12 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 
 		$constraint = $this->pc->validationConstraints("app");
 		$this->assertFalse(empty($constraint));
-		$this->assertTrue(array_key_exists("App", $constraint));
+		$this->assertTrue(array_key_exists("app", $constraint));
 		$this->assertEquals(1, sizeof($constraint));
-
 
 		$this->pc->addValidationConstraint($kittenType, "paws", Constraint::required());
 		$constraint = $this->pc->validationConstraints($kittenType);
-		$this->assertTrue(array_key_exists("paws", $constraint[ucfirst($kittenType)]));
+		$this->assertTrue(array_key_exists("paws", $constraint[$kittenType]));
 
 		$ct = new ParaObject("felix");
 		$ct->setType($kittenType);
@@ -432,7 +434,78 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 
 		$this->pc->removeValidationConstraint($kittenType, "paws", "required");
 		$constraint = $this->pc->validationConstraints($kittenType);
-		$this->assertFalse(empty($constraint[ucfirst($kittenType)]));
+		$this->assertFalse(empty($constraint[$kittenType]));
+	}
+
+	public function testResourcePermissions() {
+		// Permissions
+		$permits = $this->pc->resourcePermissions();
+		$this->assertNotNull($permits);
+
+		$this->assertTrue(empty($this->pc->grantResourcePermission(null, self::dogsType, array())));
+		$this->assertTrue(empty($this->pc->grantResourcePermission(" ", "", array())));
+
+		$this->pc->grantResourcePermission($this->u1->getId(), self::dogsType, array("GET"));
+		$permits = $this->pc->resourcePermissions($this->u1->getId());
+		$this->assertTrue(array_key_exists($this->u1->getId(), $permits));
+		$this->assertTrue(array_key_exists(self::dogsType, $permits[$this->u1->getId()]));
+		$this->assertTrue($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "GET"));
+		$this->assertFalse($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "POST"));
+
+		$permits = $this->pc->resourcePermissions();
+		$this->assertTrue(array_key_exists($this->u1->getId(), $permits));
+		$this->assertTrue(array_key_exists(self::dogsType, $permits[$this->u1->getId()]));
+
+		$this->pc->revokeResourcePermission($this->u1->getId(), self::dogsType);
+		$permits = $this->pc->resourcePermissions($this->u1->getId());
+		$this->assertFalse(array_key_exists(self::dogsType, $permits[$this->u1->getId()]));
+		$this->assertFalse($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "GET"));
+		$this->assertFalse($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "POST"));
+
+		$this->pc->grantResourcePermission($this->u2->getId(), "*", array("POST", "PUT", "PATCH", "DELETE"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u2->getId(), self::dogsType, "PUT"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u2->getId(), self::dogsType, "PATCH"));
+
+		$this->pc->revokeAllResourcePermissions($this->u2->getId());
+		$permits = $this->pc->resourcePermissions();
+		$this->assertFalse($this->pc->isAllowedTo($this->u2->getId(), self::dogsType, "PUT"));
+		$this->assertTrue(array_key_exists($this->u2->getId(), $permits));
+		$this->assertTrue(empty($permits[$this->u2->getId()]));
+
+		$this->pc->grantResourcePermission($this->u1->getId(), self::dogsType, array("POST", "PUT", "PATCH", "DELETE"));
+		$this->pc->grantResourcePermission("*", self::catsType, array("POST", "PUT", "PATCH", "DELETE"));
+		$this->pc->grantResourcePermission("*", "*", array("GET"));
+		// user-specific permissions are in effect
+		$this->assertTrue($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "PUT"));
+		$this->assertFalse($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "GET"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u1->getId(), self::catsType, "PUT"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u1->getId(), self::catsType, "GET"));
+
+		$this->pc->revokeAllResourcePermissions($this->u1->getId());
+		// user-specific permissions not found so check wildcard
+		$this->assertFalse($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "PUT"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "GET"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u1->getId(), self::catsType, "PUT"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u1->getId(), self::catsType, "GET"));
+
+		$this->pc->revokeResourcePermission("*", self::catsType);
+		// resource-specific permissions not found so check wildcard
+		$this->assertFalse($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "PUT"));
+		$this->assertFalse($this->pc->isAllowedTo($this->u1->getId(), self::catsType, "PUT"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "GET"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u1->getId(), self::catsType, "GET"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u2->getId(), self::dogsType, "GET"));
+		$this->assertTrue($this->pc->isAllowedTo($this->u2->getId(), self::catsType, "GET"));
+
+		$this->pc->revokeAllResourcePermissions("*");
+		$this->pc->revokeAllResourcePermissions($this->u1->getId());
+	}
+
+	public function testAccessTokens() {
+		$this->assertNull($this->pc->getAccessToken());
+		$this->assertNull($this->pc->signIn("facebook", "test_token"));
+		$this->pc->signOut();
+		$this->assertFalse($this->pc->revokeAllTokens());
 	}
 
 }

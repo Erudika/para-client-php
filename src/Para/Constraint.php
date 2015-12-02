@@ -28,7 +28,7 @@ class Constraint {
 	private $name;
 	private $payload;
 
-	function __construct($name, $payload) {
+	private function __construct($name, $payload) {
 		$this->name = $name;
 		$this->payload = $payload;
 	}
