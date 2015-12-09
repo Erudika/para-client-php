@@ -29,7 +29,7 @@ $client = new \Para\ParaClient('ACCESS_KEY', 'SECRET_KEY');
 
 ## Documentation
 
-###[Read the Docs](http://paraio.org/docs)
+### [Read the Docs](http://paraio.org/docs)
 
 ## Contributing
 
