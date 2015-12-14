@@ -130,7 +130,7 @@ class ParaClient {
 			try {
 				$parts = explode(".", $token);
 				$decoded = json_decode(base64_decode($parts[1]), true);
-				if ($decoded != null && array_key_exists($decoded, "exp")) {
+				if ($decoded != null && array_key_exists("exp", $decoded)) {
 					$this->tokenKeyExpires = $decoded["exp"];
 					$this->tokenKeyNextRefresh = $decoded["refresh"];
 				}
