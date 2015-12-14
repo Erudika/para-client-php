@@ -126,7 +126,7 @@ class ParaClient {
 	 * @param string $token a valid JWT access token
 	 */
 	public function setAccessToken($token = null) {
-		if (token != null) {
+		if ($token != null) {
 			try {
 				$parts = explode(".", $token);
 				$decoded = json_decode(base64_decode($parts[1]), true);
