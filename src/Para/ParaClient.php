@@ -40,7 +40,6 @@ class ParaClient {
 	const DEFAULT_ENDPOINT = "https://paraio.com";
 	const DEFAULT_PATH = "/v1/";
 	const JWT_PATH = "/jwt_auth";
-	const JWT_REFRESH_INTERVAL_SEC = 60;
 	const SEPARATOR = ":";
 
 	private $apiClient;
@@ -50,7 +49,7 @@ class ParaClient {
 	private $secretKey;
 	private $tokenKey;
 	private $tokenKeyExpires;
-	private $tokenKeyLastRefresh;
+	private $tokenKeyNextRefresh;
 
 	public function __construct($accessKey = null, $secretKey = null) {
 		if (strlen($secretKey) < 6)  {
@@ -123,12 +122,33 @@ class ParaClient {
 	}
 
 	/**
+	 * Sets the JWT access token.
+	 * @param string $token a valid JWT access token
+	 */
+	public function setAccessToken($token = null) {
+		if (token != null) {
+			try {
+				$parts = explode(".", $token);
+				$decoded = json_decode(base64_decode($parts[1]), true);
+				if ($decoded != null && array_key_exists($decoded, "exp")) {
+					$this->tokenKeyExpires = $decoded["exp"];
+					$this->tokenKeyNextRefresh = $decoded["refresh"];
+				}
+			} catch (\Exception $ex) {
+				$this->tokenKeyExpires = null;
+				$this->tokenKeyNextRefresh = null;
+			}
+		}
+		$this->tokenKey = $token;
+	}
+
+	/**
 	 * Clears the JWT token from memory, if such exists.
 	 */
 	private function clearAccessToken() {
 		$this->tokenKey = null;
 		$this->tokenKeyExpires = null;
-		$this->tokenKeyLastRefresh = null;
+		$this->tokenKeyNextRefresh = null;
 	}
 
 	private function getEntity(Response $res = null, $returnArray = true) {
@@ -1061,6 +1081,7 @@ class ParaClient {
 				$userData = $result["user"];
 				$this->tokenKey = $jwtData["access_token"];
 				$this->tokenKeyExpires = $jwtData["expires"];
+				$this->tokenKeyNextRefresh = $jwtData["refresh"];
 				$obj = new ParaObject();
 				$obj->setFields($userData);
 				return $obj;
@@ -1086,11 +1107,9 @@ class ParaClient {
 	 */
 	protected function refreshToken() {
 		$now = round(microtime(true) * 1000);
-		$interval = self::JWT_REFRESH_INTERVAL_SEC * 1000;
 		$notExpired = $this->tokenKeyExpires != null && $this->tokenKeyExpires > $now;
-		$canRefresh = $this->tokenKeyLastRefresh != null &&
-				(($this->tokenKeyLastRefresh + $interval) < $now ||
-						($this->tokenKeyLastRefresh + $interval) > $this->tokenKeyExpires);
+		$canRefresh = $this->tokenKeyNextRefresh != null &&
+				($this->tokenKeyNextRefresh < $now || $this->tokenKeyNextRefresh > $this->tokenKeyExpires);
 		// token present and NOT expired
 		if ($this->tokenKey != null && $notExpired && $canRefresh) {
 			$result = $this->getEntity($this->invokeGet(self::JWT_PATH));
@@ -1098,7 +1117,7 @@ class ParaClient {
 				$jwtData = $result["jwt"];
 				$this->tokenKey = $jwtData["access_token"];
 				$this->tokenKeyExpires = $jwtData["expires"];
-				$this->tokenKeyLastRefresh = round(microtime(true) * 1000);
+				$this->tokenKeyNextRefresh = $jwtData["refresh"];
 				return true;
 			} else {
 				$this->clearAccessToken();
