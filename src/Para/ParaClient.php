@@ -18,8 +18,6 @@
  */
 namespace Para;
 
-//require '../../vendor/autoload.php';
-
 use Para\ParaObject;
 use Para\Pager;
 use Para\Constraint;
@@ -236,7 +234,10 @@ class ParaClient {
 			}
 		}
 		if ($this->tokenKey != null) {
-			$this->refreshToken();
+			// make sure you don't create an infinite loop!
+			if (!($httpMethod == "GET" && $reqPath == self::JWT_PATH)) {
+				$this->refreshToken();
+			}
 			$headers["Authorization"] = "Bearer ".$this->tokenKey;
 		}
 		// only sign some of the query parameters
@@ -1058,7 +1059,7 @@ class ParaClient {
 	/////////////////////////////////////////////
 
 	/**
-	 * Takes an identity provider access token and fethces the user data from that provider.
+	 * Takes an identity provider access token and fetches the user data from that provider.
 	 * A new User object is created if that user doesn't exist.
 	 * Access tokens are returned upon successful authentication using one of the SDKs from
 	 * Facebook, Google, Twitter, etc.
@@ -1128,7 +1129,7 @@ class ParaClient {
 
 	/**
 	 * Revokes all user tokens for a given user id.
-	 * This is whould be equivalent to "logout everywhere".
+	 * This would be equivalent to "logout everywhere".
 	 * <b>Note:</b> Generating a new API secret on the server will also invalidate all client tokens.
 	 * Requires a valid existing token.
 	 * @return bool true if successful
