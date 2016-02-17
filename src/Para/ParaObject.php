@@ -35,6 +35,9 @@ class ParaObject {
 	private $name = "ParaObject";
 	private $tags = array();
 	private $votes = 0;
+	private $stored = true;
+	private $indexed = true;
+	private $cached = true;
 
 	public function __construct($id = null, $type = "sysprop") {
 		$this->id = $id;
@@ -54,7 +57,7 @@ class ParaObject {
 	/**
 	 * Sets a new id. Must not be null or empty.
 	 *
-	 * @param string $id the new id
+	 * @param $id $id the new id
 	 */
 	public function setId($id) {
 		$this->id = $id;
@@ -72,7 +75,7 @@ class ParaObject {
 	/**
 	 * Sets a new name. Must not be null or empty.
 	 *
-	 * @param string $name the new name
+	 * @param $name $name the new name
 	 */
 	public function setName($name) {
 		$this->name = $name;
@@ -91,7 +94,7 @@ class ParaObject {
 	/**
 	 * Sets a new app name. Must not be null or empty.
 	 *
-	 * @param string $appid the new app id (name)
+	 * @param $appid $appid the new app id (name)
 	 */
 	public function setAppid($appid) {
 		$this->appid = $appid;
@@ -109,7 +112,7 @@ class ParaObject {
 	/**
 	 * Sets a new parent id. Must not be null or empty.
 	 *
-	 * @param string $parentid a new id
+	 * @param $parentid $parentid a new id
 	 */
 	public function setParentid($parentid) {
 		$this->parentid = $parentid;
@@ -127,7 +130,7 @@ class ParaObject {
 	/**
 	 * Sets a new object type. Must not be null or empty.
 	 *
-	 * @param string $type a new type
+	 * @param $type $type a new type
 	 */
 	public function setType($type) {
 		$this->type = $type;
@@ -145,7 +148,7 @@ class ParaObject {
 	/**
 	 * Sets a new creator id. Must not be null or empty.
 	 *
-	 * @param string $creatorid a new id
+	 * @param $creatorid $creatorid a new id
 	 */
 	public function setCreatorid($creatorid) {
 		$this->creatorid = $creatorid;
@@ -184,7 +187,7 @@ class ParaObject {
 	/**
 	 * Sets the timestamp.
 	 *
-	 * @param int $timestamp a new timestamp in milliseconds.
+	 * @param $timestamp $timestamp a new timestamp in milliseconds.
 	 */
 	public function setTimestamp($timestamp) {
 		$this->timestamp = $timestamp;
@@ -202,7 +205,7 @@ class ParaObject {
 	/**
 	 * Sets the last updated timestamp.
 	 *
-	 * @param int updated a new timestamp
+	 * @param $updated updated a new timestamp
 	 */
 	public function setUpdated($updated) {
 		$this->updated = $updated;
@@ -220,7 +223,7 @@ class ParaObject {
 	/**
 	 * Merges the given tags with existing tags.
 	 *
-	 * @param tags the additional tags, or clears all tags if set to null
+	 * @param $tags the additional tags, or clears all tags if set to null
 	 */
 	public function setTags($tags = array()) {
 		$this->tags = $tags;
@@ -238,10 +241,67 @@ class ParaObject {
 	/**
 	 * Sets the votes.
 	 *
-	 * @param votes
+	 * @param $votes
 	 */
 	public function setVotes($votes = 0) {
 		$this->votes = $votes;
+	}
+
+	/**
+	 * Boolean flag which controls whether this object is stored
+	 * in the database or not. Default is true.
+	 *
+	 * @return true if object is stored
+	 */
+	public function getStored() {
+		return $this->stored;
+	}
+
+	/**
+	 * Sets the "isStored" flag.
+	 *
+	 * @param $isStored when set to true, object is stored in DB.
+	 */
+	public function setStored($isStored = true) {
+		$this->stored = $isStored;
+	}
+
+	/**
+	 * Boolean flat which controls whether this object is indexed
+	 * by the search engine. Default is true.
+	 *
+	 * @return true if this object is indexed
+	 */
+	public function getIndexed() {
+		return $this->indexed;
+	}
+
+	/**
+	 * Sets the "isIndexed" flag.
+	 *
+	 * @param isIndexed when set to true, object is indexed.
+	 */
+	public function setIndexed($isIndexed = true) {
+		$this->indexed = $isIndexed;
+	}
+
+	/**
+	 * Boolean flat which controls whether this object is cached.
+	 * Default is true.
+	 *
+	 * @return true if this object is cached on update() and create().
+	 */
+	public function getCached() {
+		return $this->cached;
+	}
+
+	/**
+	 * Sets the "isCached" flag.
+	 *
+	 * @param isCached when set to true, object is cached.
+	 */
+	public function setCached($isCached = true) {
+		$this->cached = $isCached;
 	}
 
 	/**
@@ -262,7 +322,7 @@ class ParaObject {
 
 	/**
 	 * Populates this object with data from a map.
-	 * @param type $map
+	 * @param $map $map
 	 * @return \Para\ParaObject
 	 */
 	public function setFields($map = array()) {

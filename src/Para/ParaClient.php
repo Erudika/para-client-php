@@ -63,7 +63,7 @@ class ParaClient {
 
 	/**
 	 * Sets the API endpoint URL
-	 * @param string endpoint URL
+	 * @param $string endpoint URL
 	 */
 	public function setEndpoint($endpoint) {
 		$this->endpoint = $endpoint;
@@ -83,7 +83,7 @@ class ParaClient {
 
 	/**
 	 * Sets the API request path
-	 * @param path a new path
+	 * @param $path a new path
 	 */
 	public function setApiPath($path) {
 		$this->path = $path;
@@ -121,7 +121,7 @@ class ParaClient {
 
 	/**
 	 * Sets the JWT access token.
-	 * @param string $token a valid JWT access token
+	 * @param $string $token a valid JWT access token
 	 */
 	public function setAccessToken($token = null) {
 		if ($token != null) {
@@ -305,7 +305,7 @@ class ParaClient {
 	 * Persists an object to the data store. If the object's type and id are given,
 	 * then the request will be a {@code PUT} request and any existing object will be
 	 * overwritten.
-	 * @param obj the domain object
+	 * @param $$obj the domain object
 	 * @return ParaObject|null the same object with assigned id or null if not created.
 	 */
 	public function create(ParaObject $obj = null) {
@@ -321,8 +321,8 @@ class ParaClient {
 
 	/**
 	 * Retrieves an object from the data store.
-	 * @param type the type of the object
-	 * @param id the id of the object
+	 * @param $$type the type of the object
+	 * @param $$id the id of the object
 	 * @return ParaObject|null the retrieved object or null if not found
 	 */
 	public function read($type = null, $id = null) {
@@ -338,7 +338,7 @@ class ParaClient {
 
 	/**
 	 * Updates an object permanently. Supports partial updates.
-	 * @param obj the object to update
+	 * @param $$obj the object to update
 	 * @return the updated object
 	 */
 	public function update(ParaObject $obj = null) {
@@ -350,7 +350,7 @@ class ParaClient {
 
 	/**
 	 * Deletes an object permanently.
-	 * @param obj the object
+	 * @param $$obj the object
 	 */
 	public function delete(ParaObject $obj = null) {
 		if ($obj == null) {
@@ -361,7 +361,7 @@ class ParaClient {
 
 	/**
 	 * Saves multiple objects to the data store.
-	 * @param objects the list of objects to save
+	 * @param $$objects the list of objects to save
 	 * @return array a list of objects
 	 */
 	public function createAll($objects = array()) {
@@ -376,7 +376,7 @@ class ParaClient {
 
 	/**
 	 * Retrieves multiple objects from the data store.
-	 * @param keys a list of object ids
+	 * @param $$keys a list of object ids
 	 * @return array a list of objects
 	 */
 	public function readAll($keys = array()) {
@@ -390,7 +390,7 @@ class ParaClient {
 
 	/**
 	 * Updates multiple objects.
-	 * @param objects the objects to update
+	 * @param $$objects the objects to update
 	 * @return array a list of objects
 	 */
 	public function updateAll($objects = array()) {
@@ -405,7 +405,7 @@ class ParaClient {
 
 	/**
 	 * Deletes multiple objects.
-	 * @param keys the ids of the objects to delete
+	 * @param $$keys the ids of the objects to delete
 	 */
 	public function deleteAll($keys = array()) {
 		if ($keys == null) {
@@ -419,8 +419,8 @@ class ParaClient {
 	/**
 	 * Returns a list all objects found for the given type.
 	 * The result is paginated so only one page of items is returned, at a time.
-	 * @param type the type of objects to search for
-	 * @param pager a Pager
+	 * @param $$type the type of objects to search for
+	 * @param $$pager a Pager
 	 * @return array a list of objects
 	 */
 	public function listObjects($type = null, Pager $pager = null) {
@@ -436,7 +436,7 @@ class ParaClient {
 
 	/**
 	 * Simple id search.
-	 * @param id the id
+	 * @param $$id the id
 	 * @return ParaObject|null the object if found or null
 	 */
 	public function findById($id) {
@@ -448,7 +448,7 @@ class ParaClient {
 
 	/**
 	 * Simple multi id search.
-	 * @param ids a list of ids to search for
+	 * @param $$ids a list of ids to search for
 	 * @return ParaObject|null the object if found or null
 	 */
 	public function findByIds($ids = array()) {
@@ -459,12 +459,12 @@ class ParaClient {
 
 	/**
 	 * Search for Address objects in a radius of X km from a given point.
-	 * @param type the type of object to search for. @see ParaObject::getType()
-	 * @param query the query string
-	 * @param radius the radius of the search circle
-	 * @param lat latitude
-	 * @param lng longitude
-	 * @param pager a Pager
+	 * @param $type the type of object to search for. @see ParaObject::getType()
+	 * @param $query the query string
+	 * @param $radius the radius of the search circle
+	 * @param $lat latitude
+	 * @param $lng longitude
+	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
 	public function findNearby($type, $query, $radius, $lat, $lng, Pager $pager = null) {
@@ -479,10 +479,10 @@ class ParaClient {
 
 	/**
 	 * Searches for objects that have a property which value starts with a given prefix.
-	 * @param type the type of object to search for. @see ParaObject::getType()
-	 * @param field the property name of an object
-	 * @param prefix the prefix
-	 * @param pager a Pager
+	 * @param $type the type of object to search for. @see ParaObject::getType()
+	 * @param $field the property name of an object
+	 * @param $prefix the prefix
+	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
 	public function findPrefix($type, $field, $prefix, Pager $pager = null) {
@@ -496,9 +496,9 @@ class ParaClient {
 
 	/**
 	 * Simple query string search. This is the basic search method.
-	 * @param type the type of object to search for. @see ParaObject::getType()
-	 * @param query the query string
-	 * @param pager a Pager
+	 * @param $type the type of object to search for. @see ParaObject::getType()
+	 * @param $query the query string
+	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
 	public function findQuery($type, $query, Pager $pager = null) {
@@ -511,11 +511,11 @@ class ParaClient {
 
 	/**
 	 * Searches for objects that have similar property values to a given text. A "find like this" query.
-	 * @param type the type of object to search for. @see ParaObject::getType()
-	 * @param filterKey exclude an object with this key from the results (optional)
-	 * @param fields a list of property names
-	 * @param liketext text to compare to
-	 * @param pager a Pager
+	 * @param $type the type of object to search for. @see ParaObject::getType()
+	 * @param $filterKey exclude an object with this key from the results (optional)
+	 * @param $fields a list of property names
+	 * @param $liketext text to compare to
+	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
 	public function findSimilar($type, $filterKey, $fields, $liketext, Pager $pager = null) {
@@ -531,9 +531,9 @@ class ParaClient {
 	/**
 	 * Searches for objects tagged with one or more tags.
 	 *
-	 * @param type the type of object to search for. @see ParaObject::getType()
-	 * @param tags the list of tags
-	 * @param pager a Pager
+	 * @param $type the type of object to search for. @see ParaObject::getType()
+	 * @param $tags the list of tags
+	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
 	public function findTagged($type, $tags, Pager $pager = null) {
@@ -548,8 +548,8 @@ class ParaClient {
 	 * Searches for Tag objects.
 	 * This method might be deprecated in the future.
 	 *
-	 * @param keyword the tag keyword to search for
-	 * @param pager a Pager
+	 * @param $keyword the tag keyword to search for
+	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
 	public function findTags($keyword = null, Pager $pager = null) {
@@ -560,10 +560,10 @@ class ParaClient {
 	/**
 	 * Searches for objects having a property value that is in list of possible values.
 	 *
-	 * @param type the type of object to search for. @see ParaObject::getType()
-	 * @param field the property name of an object
-	 * @param terms a list of terms (property values)
-	 * @param pager a Pager
+	 * @param $type the type of object to search for. @see ParaObject::getType()
+	 * @param $field the property name of an object
+	 * @param $terms a list of terms (property values)
+	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
 	public function findTermInList($type, $field, $terms, Pager $pager = null) {
@@ -578,10 +578,10 @@ class ParaClient {
 	/**
 	 * Searches for objects that have properties matching some given values. A terms query.
 	 *
-	 * @param type the type of object to search for. @see ParaObject::getType()
-	 * @param terms a map of fields (property names) to terms (property values)
-	 * @param matchAll match all terms. If true - AND search, if false - OR search
-	 * @param pager a Pager
+	 * @param $type the type of object to search for. @see ParaObject::getType()
+	 * @param $terms a map of fields (property names) to terms (property values)
+	 * @param $matchAll match all terms. If true - AND search, if false - OR search
+	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
 	public function findTerms($type, $terms = array(), $matchAll = true, Pager $pager = null) {
@@ -606,10 +606,10 @@ class ParaClient {
 
 	/**
 	 * Searches for objects that have a property with a value matching a wildcard query.
-	 * @param type the type of object to search for. @see ParaObject::getType()
-	 * @param field the property name of an object
-	 * @param wildcard wildcard query string. For example "cat*".
-	 * @param pager a Pager
+	 * @param $type the type of object to search for. @see ParaObject::getType()
+	 * @param $field the property name of an object
+	 * @param $wildcard wildcard query string. For example "cat*".
+	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
 	public function findWildcard($type, $field, $wildcard = "*", Pager $pager = null) {
@@ -623,8 +623,8 @@ class ParaClient {
 
 	/**
 	 * Counts indexed objects matching a set of terms/values.
-	 * @param type the type of object to search for. @see ParaObject::getType()
-	 * @param terms a list of terms (property values)
+	 * @param $type the type of object to search for. @see ParaObject::getType()
+	 * @param $terms a list of terms (property values)
 	 * @return int the number of results found
 	 */
 	public function getCount($type, $terms = array()) {
@@ -672,8 +672,8 @@ class ParaClient {
 
 	/**
 	 * Count the total number of links between this object and another type of object.
-	 * @param type2 the other type of object
-	 * @param obj the object to execute this method on
+	 * @param $type2 the other type of object
+	 * @param $obj the object to execute this method on
 	 * @return int the number of links for the given object
 	 */
 	public function countLinks(ParaObject $obj = null, $type2 = null) {
@@ -690,9 +690,9 @@ class ParaClient {
 
 	/**
 	 * Returns all objects linked to the given one. Only applicable to many-to-many relationships.
-	 * @param type2 type of linked objects to search for
-	 * @param obj the object to execute this method on
-	 * @param pager a Pager
+	 * @param $type2 type of linked objects to search for
+	 * @param $obj the object to execute this method on
+	 * @param $pager a Pager
 	 * @return array a list of linked objects
 	 */
 	public function getLinkedObjects(ParaObject $obj = null, $type2 = null, Pager $pager = null) {
@@ -705,9 +705,9 @@ class ParaClient {
 
 	/**
 	 * Checks if this object is linked to another.
-	 * @param type2 the other type
-	 * @param id2 the other id
-	 * @param obj the object to execute this method on
+	 * @param $type2 the other type
+	 * @param $id2 the other id
+	 * @param $obj the object to execute this method on
 	 * @return bool true if the two are linked
 	 */
 	public function isLinked(ParaObject $obj = null, $type2 = null, $id2 = null) {
@@ -720,8 +720,8 @@ class ParaClient {
 
 	/**
 	 * Checks if a given object is linked to this one.
-	 * @param toObj the other object
-	 * @param obj the object to execute this method on
+	 * @param $toObj the other object
+	 * @param $obj the object to execute this method on
 	 * @return bool true if linked
 	 */
 	public function isLinkedToObject(ParaObject $obj = null, ParaObject $toObj = null) {
@@ -733,8 +733,8 @@ class ParaClient {
 
 	/**
 	 *
-	 * @param id2 link to the object with this id
-	 * @param obj the object to execute this method on
+	 * @param $id2 link to the object with this id
+	 * @param $obj the object to execute this method on
 	 * @return string the id of the Linker object that is created
 	 */
 	public function link(ParaObject $obj = null, $id2 = null) {
@@ -748,9 +748,9 @@ class ParaClient {
 	/**
 	 * Unlinks an object from this one.
 	 * Only a link is deleted. Objects are left untouched.
-	 * @param type2 the other type
-	 * @param obj the object to execute this method on
-	 * @param id2 the other id
+	 * @param $type2 the other type
+	 * @param $obj the object to execute this method on
+	 * @param $id2 the other id
 	 */
 	public function unlink(ParaObject $obj = null, $type2 = null, $id2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null || $id2 == null) {
@@ -762,7 +762,7 @@ class ParaClient {
 
 	/**
 	 * Unlinks all objects that are linked to this one.
-	 * @param obj the object to execute this method on
+	 * @param $obj the object to execute this method on
 	 * Deletes all Linker objects.
 	 * Only the links are deleted. Objects are left untouched.
 	 */
@@ -776,8 +776,8 @@ class ParaClient {
 
 	/**
 	 * Count the total number of child objects for this object.
-	 * @param type2 the type of the other object
-	 * @param obj the object to execute this method on
+	 * @param $type2 the type of the other object
+	 * @param $obj the object to execute this method on
 	 * @return int the number of links
 	 */
 	public function countChildren(ParaObject $obj = null, $type2 = null) {
@@ -795,11 +795,11 @@ class ParaClient {
 
 	/**
 	 * Returns all child objects linked to this object.
-	 * @param type2 the type of children to look for
-	 * @param field the field name to use as filter
-	 * @param term the field value to use as filter
-	 * @param obj the object to execute this method on
-	 * @param pager a Pager
+	 * @param $type2 the type of children to look for
+	 * @param $field the field name to use as filter
+	 * @param $term the field value to use as filter
+	 * @param $obj the object to execute this method on
+	 * @param $pager a Pager
 	 * @return array a list of ParaObject in a one-to-many relationship with this object
 	 */
 	public function getChildren(ParaObject $obj = null, $type2 = null, $field = null, $term = null, Pager $pager = null) {
@@ -820,8 +820,8 @@ class ParaClient {
 
 	/**
 	 * Deletes all child objects permanently.
-	 * @param obj the object to execute this method on
-	 * @param type2 the children's type.
+	 * @param $obj the object to execute this method on
+	 * @param $type2 the children's type.
 	 */
 	public function deleteChildren(ParaObject $obj = null, $type2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
@@ -858,8 +858,8 @@ class ParaClient {
 
 	/**
 	 * Formats a date in a specific format.
-	 * @param format the date format
-	 * @param loc the locale instance
+	 * @param $format the date format
+	 * @param $loc the locale instance
 	 * @return string a formatted date
 	 */
 	public function formatDate($format = "", $loc = null) {
@@ -869,8 +869,8 @@ class ParaClient {
 
 	/**
 	 * Converts spaces to dashes.
-	 * @param str a string with spaces
-	 * @param replaceWith a string to replace spaces with
+	 * @param $str a string with spaces
+	 * @param $replaceWith a string to replace spaces with
 	 * @return string a string with dashes
 	 */
 	public function noSpaces($str = "", $replaceWith = "") {
@@ -880,7 +880,7 @@ class ParaClient {
 
 	/**
 	 * Strips all symbols, punctuation, whitespace and control chars from a string.
-	 * @param str a dirty string
+	 * @param $str a dirty string
 	 * @return string a clean string
 	 */
 	public function stripAndTrim($str = "") {
@@ -890,7 +890,7 @@ class ParaClient {
 
 	/**
 	 * Converts Markdown to HTML
-	 * @param markdown$Markdown
+	 * @param $markdown$Markdown
 	 * @return string HTML
 	 */
 	public function markdownToHtml($markdownString = "") {
@@ -900,7 +900,7 @@ class ParaClient {
 
 	/**
 	 * Returns the number of minutes, hours, months elapsed for a time delta (milliseconds).
-	 * @param delta the time delta between two events, in milliseconds
+	 * @param $delta the time delta between two events, in milliseconds
 	 * @return string a string like "5m", "1h"
 	 */
 	public function approximately($delta = "") {
@@ -947,7 +947,7 @@ class ParaClient {
 
 	/**
 	 * Returns the validation constraints map.
-	 * @param type a type
+	 * @param $type a type
 	 * @return array a map containing all validation constraints.
 	 */
 	public function validationConstraints($type = "") {
@@ -956,9 +956,9 @@ class ParaClient {
 
 	/**
 	 * Add a new constraint for a given field.
-	 * @param type a type
-	 * @param field a field name
-	 * @param c the constraint
+	 * @param $type a type
+	 * @param $field a field name
+	 * @param $c the constraint
 	 * @return array a map containing all validation constraints for this type.
 	 */
 	public function addValidationConstraint($type, $field, Constraint $c) {
@@ -970,9 +970,9 @@ class ParaClient {
 
 	/**
 	 * Removes a validation constraint for a given field.
-	 * @param type a type
-	 * @param field a field name
-	 * @param constraintName the name of the constraint to remove
+	 * @param $type a type
+	 * @param $field a field name
+	 * @param $constraintName the name of the constraint to remove
 	 * @return array a map containing all validation constraints for this type.
 	 */
 	public function removeValidationConstraint($type, $field, $constraintName) {
@@ -989,7 +989,7 @@ class ParaClient {
 	/**
 	 * Returns only the permissions for a given subject (user) of the current app.
 	 * If subject is not given returns the permissions for all subjects and resources for current app.
-	 * @param subjectid the subject id (user id)
+	 * @param $subjectid the subject id (user id)
 	 * @return a map of subject ids to resource names to a list of allowed methods
 	 */
 	public function resourcePermissions($subjectid = null) {
@@ -1002,34 +1002,34 @@ class ParaClient {
 
 	/**
 	 * Grants a permission to a subject that allows them to call the specified HTTP methods on a given resource.
-	 * @param subjectid subject id (user id)
-	 * @param resourceName resource name or object type
-	 * @param permission a set of HTTP methods - GET, POST, PUT, PATCH, DELETE
+	 * @param $subjectid subject id (user id)
+	 * @param $resourcePath resource path or object type (URL encoded)
+	 * @param $permission a set of HTTP methods - GET, POST, PUT, PATCH, DELETE
 	 * @return array a map of the permissions for this subject id
 	 */
-	public function grantResourcePermission($subjectid, $resourceName, array $permission) {
-		if ($subjectid == null || $resourceName == null || $permission == null) {
+	public function grantResourcePermission($subjectid, $resourcePath, array $permission) {
+		if ($subjectid == null || $resourcePath == null || $permission == null) {
 			return array();
 		}
-		return $this->getEntity($this->invokePut("_permissions/".$subjectid."/".$resourceName, $permission));
+		return $this->getEntity($this->invokePut("_permissions/".$subjectid."/".$resourcePath, $permission));
 	}
 
 	/**
 	 * Revokes a permission for a subject, meaning they no longer will be able to access the given resource.
-	 * @param subjectid subject id (user id)
-	 * @param resourceName resource name or object type
+	 * @param $subjectid subject id (user id)
+	 * @param $resourcePath resource path or object type (URL encoded)
 	 * @return array a map of the permissions for this subject id
 	 */
-	public function revokeResourcePermission($subjectid, $resourceName) {
-		if ($subjectid == null || $resourceName == null) {
+	public function revokeResourcePermission($subjectid, $resourcePath) {
+		if ($subjectid == null || $resourcePath == null) {
 			return array();
 		}
-		return $this->getEntity($this->invokeDelete("_permissions/".$subjectid."/".$resourceName));
+		return $this->getEntity($this->invokeDelete("_permissions/".$subjectid."/".$resourcePath));
 	}
 
 	/**
 	 * Revokes all permission for a subject.
-	 * @param subjectid subject id (user id)
+	 * @param $subjectid subject id (user id)
 	 * @return array a map of the permissions for this subject id
 	 */
 	public function revokeAllResourcePermissions($subjectid) {
@@ -1041,16 +1041,16 @@ class ParaClient {
 
 	/**
 	 * Checks if a subject is allowed to call method X on resource Y.
-	 * @param subjectid subject id
-	 * @param resourceName resource name (type)
-	 * @param httpMethod HTTP method name
+	 * @param $subjectid subject id
+	 * @param $resourcePath resource path or object type (URL encoded)
+	 * @param $httpMethod HTTP method name
 	 * @return bool true if allowed
 	 */
-	public function isAllowedTo($subjectid, $resourceName, $httpMethod) {
-		if ($subjectid == null || $resourceName == null || $httpMethod == null) {
+	public function isAllowedTo($subjectid, $resourcePath, $httpMethod) {
+		if ($subjectid == null || $resourcePath == null || $httpMethod == null) {
 			return false;
 		}
-		$url = "_permissions/".$subjectid."/".$resourceName."/".$httpMethod;
+		$url = "_permissions/".$subjectid."/".$resourcePath."/".$httpMethod;
 		return $this->getEntity($this->invokeGet($url)) == "true";
 	}
 
@@ -1066,8 +1066,8 @@ class ParaClient {
 	 * <b>Note:</b> Twitter uses OAuth 1 and gives you a token and a token secret.
 	 * <b>You must concatenate them like this: <code>{oauth_token}:{oauth_token_secret}</code> and
 	 * use that as the provider access token.</b>
-	 * @param provider identity provider, e.g. 'facebook', 'google'...
-	 * @param providerToken access token from a provider like Facebook, Google, Twitter
+	 * @param $provider identity provider, e.g. 'facebook', 'google'...
+	 * @param $providerToken access token from a provider like Facebook, Google, Twitter
 	 * @return ParaObject|null a User object or null if something failed
 	 */
 	public function signIn($provider, $providerToken) {
