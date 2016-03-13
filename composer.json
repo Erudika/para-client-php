@@ -4,10 +4,11 @@
   "keywords": [
     "para",
     "backend",
+		"api",
     "paraio"
   ],
-  "homepage": "https://paraio.org",
-  "license": "Apache 2.0",
+  "homepage": "http://www.paraio.org",
+  "license": "Apache-2.0",
   "authors": [
     {
       "name": "Alex Bogdanovski <alex@erudika.com>",

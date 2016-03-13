@@ -50,9 +50,6 @@ class ParaClient {
 	private $tokenKeyNextRefresh;
 
 	public function __construct($accessKey = null, $secretKey = null) {
-		if (strlen($secretKey) < 6)  {
-			trigger_error("Secret key appears to be invalid. Make sure you call 'signIn()' first.", E_USER_WARNING);
-		}
 		$this->accessKey = $accessKey;
 		$this->secretKey = $secretKey;
 		$this->apiClient = new Client();
@@ -217,10 +214,19 @@ class ParaClient {
 	private function invokeSignedRequest($httpMethod, $endpointURL, $reqPath,
 					$headers = array(), $params = array(), $jsonEntity = null) {
 
-		if ($this->accessKey == null || ($this->secretKey == null && $this->tokenKey == null)) {
-			error_log("Security credentials are invalid.", 0);
+		if (empty($this->accessKey)) {
+			trigger_error("Blank access key: ".$httpMethod." ".$reqPath, E_USER_WARNING);
 			return null;
 		}
+		$doSign = ($this->tokenKey == null);
+		if (empty($this->secretKey) && empty($this->tokenKey)) {
+			if ($headers == null) {
+				$headers = array();
+			}
+			$headers["Authorization"] = "Anonymous ".$this->accessKey;
+			$doSign = false;
+		}
+
 		$headers = ($headers == null) ? array() : $headers;
 		$query = array();
 		if ($params != null) {
@@ -244,7 +250,7 @@ class ParaClient {
 		$queryString = empty($query) ? "" : "?" . \GuzzleHttp\Psr7\build_query($query);
 		$req = new Request($httpMethod, $endpointURL . $reqPath . $queryString, $headers, $jsonEntity);
 
-		if ($this->tokenKey == null) {
+		if ($doSign) {
 			$sig = new SignatureV4("para", "us-east-1");
 			$req = $sig->signRequest($req, new Credentials($this->accessKey, $this->secretKey));
 		}
@@ -1003,27 +1009,33 @@ class ParaClient {
 	/**
 	 * Grants a permission to a subject that allows them to call the specified HTTP methods on a given resource.
 	 * @param $subjectid subject id (user id)
-	 * @param $resourcePath resource path or object type (URL encoded)
+	 * @param $resourcePath resource path or object type
 	 * @param $permission a set of HTTP methods - GET, POST, PUT, PATCH, DELETE
+	 * @param $allowGuestAccess if true - all unauthenticated requests will go through, 'false' by default.
 	 * @return array a map of the permissions for this subject id
 	 */
-	public function grantResourcePermission($subjectid, $resourcePath, array $permission) {
+	public function grantResourcePermission($subjectid, $resourcePath, array $permission, $allowGuestAccess = false) {
 		if ($subjectid == null || $resourcePath == null || $permission == null) {
 			return array();
 		}
+		if ($allowGuestAccess && $subjectid === "*") {
+			array_push($permission, "?");
+		}
+		$resourcePath = urlencode($resourcePath);
 		return $this->getEntity($this->invokePut("_permissions/".$subjectid."/".$resourcePath, $permission));
 	}
 
 	/**
 	 * Revokes a permission for a subject, meaning they no longer will be able to access the given resource.
 	 * @param $subjectid subject id (user id)
-	 * @param $resourcePath resource path or object type (URL encoded)
+	 * @param $resourcePath resource path or object type
 	 * @return array a map of the permissions for this subject id
 	 */
 	public function revokeResourcePermission($subjectid, $resourcePath) {
 		if ($subjectid == null || $resourcePath == null) {
 			return array();
 		}
+		$resourcePath = urlencode($resourcePath);
 		return $this->getEntity($this->invokeDelete("_permissions/".$subjectid."/".$resourcePath));
 	}
 
@@ -1042,7 +1054,7 @@ class ParaClient {
 	/**
 	 * Checks if a subject is allowed to call method X on resource Y.
 	 * @param $subjectid subject id
-	 * @param $resourcePath resource path or object type (URL encoded)
+	 * @param $resourcePath resource path or object type
 	 * @param $httpMethod HTTP method name
 	 * @return bool true if allowed
 	 */
@@ -1050,6 +1062,7 @@ class ParaClient {
 		if ($subjectid == null || $resourcePath == null || $httpMethod == null) {
 			return false;
 		}
+		$resourcePath = urlencode($resourcePath);
 		$url = "_permissions/".$subjectid."/".$resourcePath."/".$httpMethod;
 		return $this->getEntity($this->invokeGet($url)) == "true";
 	}

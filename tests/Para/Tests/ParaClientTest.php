@@ -32,6 +32,7 @@ use Para\Constraint;
 class ParaClientTest extends \PHPUnit_Framework_TestCase {
 
 	private $pc;
+	private $pc2;
 	const catsType = "cat";
 	const dogsType = "dog";
 	const batsType = "bat";
@@ -46,8 +47,10 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 	protected $a2;
 
 	protected function setUp() {
-		$this->pc = new ParaClient("app:para", "ThpORpZ35uIJqT8rfOCb9t/5/doGbIUgmeGwO5jjyop85xyOXhx7Pg==");
+		$this->pc = new ParaClient("app:para", "J5Scw2IJN9YQPp+zs2EMAgBQ75p5A88zdGPt00hb5ZKpJoV63+zSvw==");
 		$this->pc->setEndpoint("http://localhost:8080");
+		$this->pc2 = new ParaClient("app:para", null);
+		$this->pc2->setEndpoint("http://localhost:8080");
 		if($this->pc->me() == null) {
 			throw new \Exception("Local Para server must be started before testing.");
 		}
@@ -451,6 +454,11 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 		$this->assertTrue(array_key_exists(self::dogsType, $permits[$this->u1->getId()]));
 		$this->assertTrue($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "GET"));
 		$this->assertFalse($this->pc->isAllowedTo($this->u1->getId(), self::dogsType, "POST"));
+		// anonymous permissions
+		$this->assertFalse($this->pc->isAllowedTo("*", "utils/timestamp", "GET"));
+		$this->assertNotNull($this->pc->grantResourcePermission("*", "utils/timestamp", array("GET"), true));
+		$this->assertTrue($this->pc2->getTimestamp() > 0);
+		$this->assertFalse($this->pc->isAllowedTo("*", "utils/timestamp", "DELETE"));
 
 		$permits = $this->pc->resourcePermissions();
 		$this->assertTrue(array_key_exists($this->u1->getId(), $permits));
