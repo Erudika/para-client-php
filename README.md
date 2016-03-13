@@ -1,5 +1,4 @@
 ![Logo](https://s3-eu-west-1.amazonaws.com/org.paraio/para.png)
-============================
 
 # PHP Client for Para
 [![Packagist](https://img.shields.io/packagist/v/erudika/para-client-php.svg)](https://packagist.org/packages/erudika/para-client-php)
