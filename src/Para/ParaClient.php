@@ -118,7 +118,7 @@ class ParaClient {
 
 	/**
 	 * Sets the JWT access token.
-	 * @param $string $token a valid JWT access token
+	 * @param $token a valid JWT access token
 	 */
 	public function setAccessToken($token = null) {
 		if ($token != null) {
@@ -311,7 +311,7 @@ class ParaClient {
 	 * Persists an object to the data store. If the object's type and id are given,
 	 * then the request will be a {@code PUT} request and any existing object will be
 	 * overwritten.
-	 * @param $$obj the domain object
+	 * @param $obj the domain object
 	 * @return ParaObject|null the same object with assigned id or null if not created.
 	 */
 	public function create(ParaObject $obj = null) {
@@ -327,8 +327,8 @@ class ParaClient {
 
 	/**
 	 * Retrieves an object from the data store.
-	 * @param $$type the type of the object
-	 * @param $$id the id of the object
+	 * @param $type the type of the object
+	 * @param $id the id of the object
 	 * @return ParaObject|null the retrieved object or null if not found
 	 */
 	public function read($type = null, $id = null) {
@@ -344,7 +344,7 @@ class ParaClient {
 
 	/**
 	 * Updates an object permanently. Supports partial updates.
-	 * @param $$obj the object to update
+	 * @param $obj the object to update
 	 * @return the updated object
 	 */
 	public function update(ParaObject $obj = null) {
@@ -356,7 +356,7 @@ class ParaClient {
 
 	/**
 	 * Deletes an object permanently.
-	 * @param $$obj the object
+	 * @param $obj the object
 	 */
 	public function delete(ParaObject $obj = null) {
 		if ($obj == null) {
@@ -367,7 +367,7 @@ class ParaClient {
 
 	/**
 	 * Saves multiple objects to the data store.
-	 * @param $$objects the list of objects to save
+	 * @param $objects the list of objects to save
 	 * @return array a list of objects
 	 */
 	public function createAll($objects = array()) {
@@ -382,7 +382,7 @@ class ParaClient {
 
 	/**
 	 * Retrieves multiple objects from the data store.
-	 * @param $$keys a list of object ids
+	 * @param $keys a list of object ids
 	 * @return array a list of objects
 	 */
 	public function readAll($keys = array()) {
@@ -396,7 +396,7 @@ class ParaClient {
 
 	/**
 	 * Updates multiple objects.
-	 * @param $$objects the objects to update
+	 * @param $objects the objects to update
 	 * @return array a list of objects
 	 */
 	public function updateAll($objects = array()) {
@@ -411,7 +411,7 @@ class ParaClient {
 
 	/**
 	 * Deletes multiple objects.
-	 * @param $$keys the ids of the objects to delete
+	 * @param $keys the ids of the objects to delete
 	 */
 	public function deleteAll($keys = array()) {
 		if ($keys == null) {
@@ -425,8 +425,8 @@ class ParaClient {
 	/**
 	 * Returns a list all objects found for the given type.
 	 * The result is paginated so only one page of items is returned, at a time.
-	 * @param $$type the type of objects to search for
-	 * @param $$pager a Pager
+	 * @param $type the type of objects to search for
+	 * @param $pager a Pager
 	 * @return array a list of objects
 	 */
 	public function listObjects($type = null, Pager $pager = null) {
@@ -442,7 +442,7 @@ class ParaClient {
 
 	/**
 	 * Simple id search.
-	 * @param $$id the id
+	 * @param $id the id
 	 * @return ParaObject|null the object if found or null
 	 */
 	public function findById($id) {
@@ -454,7 +454,7 @@ class ParaClient {
 
 	/**
 	 * Simple multi id search.
-	 * @param $$ids a list of ids to search for
+	 * @param $ids a list of ids to search for
 	 * @return ParaObject|null the object if found or null
 	 */
 	public function findByIds($ids = array()) {
@@ -513,6 +513,23 @@ class ParaClient {
 		$params["type"] = $type;
 		array_merge($params, $this->pagerToParams($pager));
 		return $this->getItems($this->find("", $params), $pager);
+	}
+
+	/**
+	 * Searches within a nested field. The objects of the given type must contain a nested field "nstd".
+	 * @param $type the type of object to search for. @see ParaObject::getType()
+	 * @param $field the name of the field to target (within a nested field "nstd")
+	 * @param $query the query string
+	 * @param $pager a Pager
+	 * @return array a list of objects found
+	 */
+	public function findNestedQuery($type, $field, $query, Pager $pager = null) {
+		$params = array();
+		$params["q"] = $query;
+		$params["field"] = $field;
+		$params["type"] = $type;
+		array_merge($params, $this->pagerToParams($pager));
+		return $this->getItems($this->find("nested", $params), $pager);
 	}
 
 	/**
@@ -678,8 +695,8 @@ class ParaClient {
 
 	/**
 	 * Count the total number of links between this object and another type of object.
-	 * @param $type2 the other type of object
 	 * @param $obj the object to execute this method on
+	 * @param $type2 the other type of object
 	 * @return int the number of links for the given object
 	 */
 	public function countLinks(ParaObject $obj = null, $type2 = null) {
@@ -696,8 +713,8 @@ class ParaClient {
 
 	/**
 	 * Returns all objects linked to the given one. Only applicable to many-to-many relationships.
-	 * @param $type2 type of linked objects to search for
 	 * @param $obj the object to execute this method on
+	 * @param $type2 type of linked objects to search for
 	 * @param $pager a Pager
 	 * @return array a list of linked objects
 	 */
@@ -706,14 +723,36 @@ class ParaClient {
 			return array();
 		}
 		$url = $obj->getObjectURI()."/links/".$type2;
-		return $this->getItems($this->getEntity($this->invokeGet($url)), $pager);
+		return $this->getItems($this->getEntity($this->invokeGet($url), $this->pagerToParams($pager)), $pager);
+	}
+
+	/**
+	 * Searches through all linked objects in many-to-many relationships.
+	 * @param $obj the object to execute this method on
+	 * @param $type2 type of linked objects to search for
+	 * @param $field the name of the field to target (within a nested field "nstd")
+	 * @param $query a query string
+	 * @param $pager a Pager
+	 * @return array a list of linked objects
+	 */
+	public function findLinkedObjects(ParaObject $obj = null, $type2 = null, $field = "name", $query = "*",
+					Pager $pager = null) {
+		if ($obj == null || $obj->getId() == null || $type2 == null) {
+			return array();
+		}
+		$params = array();
+		$params["field"] = $field;
+		$params["q"] = $query;
+		array_merge($params, $this->pagerToParams($pager));
+		$url = $obj->getObjectURI()."/links/".$type2;
+		return $this->getItems($this->getEntity($this->invokeGet($url), $params), $pager);
 	}
 
 	/**
 	 * Checks if this object is linked to another.
+	 * @param $obj the object to execute this method on
 	 * @param $type2 the other type
 	 * @param $id2 the other id
-	 * @param $obj the object to execute this method on
 	 * @return bool true if the two are linked
 	 */
 	public function isLinked(ParaObject $obj = null, $type2 = null, $id2 = null) {
@@ -726,8 +765,8 @@ class ParaClient {
 
 	/**
 	 * Checks if a given object is linked to this one.
-	 * @param $toObj the other object
 	 * @param $obj the object to execute this method on
+	 * @param $toObj the other object
 	 * @return bool true if linked
 	 */
 	public function isLinkedToObject(ParaObject $obj = null, ParaObject $toObj = null) {
@@ -738,9 +777,11 @@ class ParaClient {
 	}
 
 	/**
-	 *
-	 * @param $id2 link to the object with this id
+	 * Links an object to this one in a many-to-many relationship.
+	 * Only a link is created. Objects are left untouched.
+	 * The type of the second object is automatically determined on read.
 	 * @param $obj the object to execute this method on
+	 * @param $id2 link to the object with this id
 	 * @return string the id of the Linker object that is created
 	 */
 	public function link(ParaObject $obj = null, $id2 = null) {
@@ -754,8 +795,8 @@ class ParaClient {
 	/**
 	 * Unlinks an object from this one.
 	 * Only a link is deleted. Objects are left untouched.
-	 * @param $type2 the other type
 	 * @param $obj the object to execute this method on
+	 * @param $type2 the other type
 	 * @param $id2 the other id
 	 */
 	public function unlink(ParaObject $obj = null, $type2 = null, $id2 = null) {
@@ -782,8 +823,8 @@ class ParaClient {
 
 	/**
 	 * Count the total number of child objects for this object.
-	 * @param $type2 the type of the other object
 	 * @param $obj the object to execute this method on
+	 * @param $type2 the type of the other object
 	 * @return int the number of links
 	 */
 	public function countChildren(ParaObject $obj = null, $type2 = null) {
@@ -801,10 +842,10 @@ class ParaClient {
 
 	/**
 	 * Returns all child objects linked to this object.
+	 * @param $obj the object to execute this method on
 	 * @param $type2 the type of children to look for
 	 * @param $field the field name to use as filter
 	 * @param $term the field value to use as filter
-	 * @param $obj the object to execute this method on
 	 * @param $pager a Pager
 	 * @return array a list of ParaObject in a one-to-many relationship with this object
 	 */
@@ -820,6 +861,28 @@ class ParaClient {
 		if ($term != null) {
 			$params["term"] = $term;
 		}
+		array_merge($params, $this->pagerToParams($pager));
+		$url = $obj->getObjectURI()."/links/".$type2;
+		return $this->getItems($this->getEntity($this->invokeGet($url, $params)), $pager);
+	}
+
+	/**
+	 * Search through all child objects. Only searches child objects directly
+	 * connected to this parent via the {@code parentid} field.
+	 * @param $obj the object to execute this method on
+	 * @param $type2 the type of children to look for
+	 * @param $query a query string
+	 * @param $pager a Pager
+	 * @return array a list of ParaObject in a one-to-many relationship with this object
+	 */
+	public function findChildren(ParaObject $obj = null, $type2 = null, $query = "*", Pager $pager = null) {
+		if ($obj == null || $obj->getId() == null || $type2 == null) {
+			return array();
+		}
+		$params = array();
+		$params["childrenonly"] = "true";
+		$params["q"] = $query;
+		array_merge($params, $this->pagerToParams($pager));
 		$url = $obj->getObjectURI()."/links/".$type2;
 		return $this->getItems($this->getEntity($this->invokeGet($url, $params)), $pager);
 	}
@@ -896,7 +959,7 @@ class ParaClient {
 
 	/**
 	 * Converts Markdown to HTML
-	 * @param $markdown$Markdown
+	 * @param $markdownString
 	 * @return string HTML
 	 */
 	public function markdownToHtml($markdownString = "") {
