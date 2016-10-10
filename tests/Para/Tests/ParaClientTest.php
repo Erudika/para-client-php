@@ -47,7 +47,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 	protected $a2;
 
 	protected function setUp() {
-		$this->pc = new ParaClient("app:para", "J5Scw2IJN9YQPp+zs2EMAgBQ75p5A88zdGPt00hb5ZKpJoV63+zSvw==");
+		$this->pc = new ParaClient("app:para", "HO29xPlZUpHYg6/qbgqDjZ5MyTNGte5lAy+UlB+2qDkseutNNOqsHQ==");
 		$this->pc->setEndpoint("http://localhost:8080");
 		$this->pc2 = new ParaClient("app:para", null);
 		$this->pc2->setEndpoint("http://localhost:8080");
@@ -437,7 +437,8 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 
 		$this->pc->removeValidationConstraint($kittenType, "paws", "required");
 		$constraint = $this->pc->validationConstraints($kittenType);
-		$this->assertFalse(empty($constraint));
+		$this->assertTrue(empty($constraint));
+		$this->assertFalse(array_key_exists($kittenType, $constraint));
 	}
 
 	public function testResourcePermissions() {
@@ -507,6 +508,33 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 
 		$this->pc->revokeAllResourcePermissions("*");
 		$this->pc->revokeAllResourcePermissions($this->u1->getId());
+	}
+
+	public function testAppSettings() {
+		$settings = $this->pc->appSettings();
+		$this->assertNotNull($settings);
+		$this->assertTrue(empty($settings));
+
+		$this->pc->addAppSetting("", null);
+		$this->pc->addAppSetting(" ", " ");
+		$this->pc->addAppSetting(null, " ");
+		$this->pc->addAppSetting("prop1", 1);
+		$this->pc->addAppSetting("prop2", true);
+		$this->pc->addAppSetting("prop3", "string");
+
+		$this->assertEquals(3, sizeof($this->pc->appSettings()));
+		$this->assertEquals($this->pc->appSettings(), $this->pc->appSettings(null));
+		$this->assertEquals(array("value" => 1), $this->pc->appSettings("prop1"));
+		$this->assertEquals(array("value" => true), $this->pc->appSettings("prop2"));
+		$this->assertEquals(array("value" => "string"), $this->pc->appSettings("prop3"));
+
+		$this->pc->removeAppSetting("prop3");
+		$this->pc->removeAppSetting(" ");
+		$this->pc->removeAppSetting(null);
+		$this->assertTrue(empty($this->pc->appSettings("prop3")));
+		$this->assertEquals(2, sizeof($this->pc->appSettings()));
+		$this->pc->removeAppSetting("prop2");
+		$this->pc->removeAppSetting("prop1");
 	}
 
 	public function testAccessTokens() {

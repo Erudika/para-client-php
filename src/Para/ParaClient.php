@@ -153,6 +153,9 @@ class ParaClient {
 				if ($returnArray) {
 					$body = $res->getBody()->getContents();
 					try {
+						if ($body === "{}" || $body === "{ }") {
+							return array();
+						}
 						$json = json_decode($body, true);
 						return ($json != null) ? $json : $body;
 					} catch (\Exception $exc) {
@@ -298,7 +301,11 @@ class ParaClient {
 			if ($pager !== null && array_key_exists("totalHits", $result)) {
 				$pager->count = $result["totalHits"];
 			}
-			return $this->getItemsFromList($result["items"]);
+			if (gettype($result) === "object") {
+				return $this->getItemsFromList($result->items);
+			} else {
+				return $this->getItemsFromList($result["items"]);
+			}
 		}
 		return array();
 	}
@@ -1128,6 +1135,44 @@ class ParaClient {
 		$resourcePath = urlencode($resourcePath);
 		$url = "_permissions/".$subjectid."/".$resourcePath."/".$httpMethod;
 		return $this->getEntity($this->invokeGet($url)) == "true";
+	}
+
+	/////////////////////////////////////////////
+	//			Resource Permissions
+	/////////////////////////////////////////////
+
+	/**
+	 * Returns the value of a specific app setting (property). If $key is blank all settings are returned.
+	 * @param $key a key (optional)
+	 * @return array a map of app settings
+	 */
+	public function appSettings($key = null) {
+		if (empty($key)) {
+			return $this->getEntity($this->invokeGet("_settings"));
+		} else {
+			return $this->getEntity($this->invokeGet("_settings/".$key));
+		}
+	}
+
+	/**
+	 * Adds or overwrites an app-specific setting.
+	 * @param $key a key
+	 * @param $value a value
+	 */
+	public function addAppSetting($key, $value) {
+		if (!empty($key) && $value != null) {
+			$this->invokePut("_settings/".$key, array("value" => $value));
+		}
+	}
+
+	/**
+	 * Removes an app-specific setting.
+	 * @param $key a key
+	 */
+	public function removeAppSetting($key) {
+		if (!empty($key)) {
+			$this->invokeDelete("_settings/".$key);
+		}
 	}
 
 	/////////////////////////////////////////////
