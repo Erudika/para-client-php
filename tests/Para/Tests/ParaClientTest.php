@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright 2013-2016 Erudika. https://erudika.com
+ * Copyright 2013-2017 Erudika. https://erudika.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 	protected $a2;
 
 	protected function setUp() {
-		$this->pc = new ParaClient("app:para", "HO29xPlZUpHYg6/qbgqDjZ5MyTNGte5lAy+UlB+2qDkseutNNOqsHQ==");
+		$this->pc = new ParaClient("app:para", "o24K97DuMnRQkI5tGmuQcLiPzWEeoZBQ2FGJdac/ekujQ//lK4LmVw==");
 		$this->pc->setEndpoint("http://localhost:8080");
 		$this->pc2 = new ParaClient("app:para", null);
 		$this->pc2->setEndpoint("http://localhost:8080");
@@ -439,6 +439,19 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 		$constraint = $this->pc->validationConstraints($kittenType);
 		$this->assertTrue(empty($constraint));
 		$this->assertFalse(array_key_exists($kittenType, $constraint));
+
+		// votes
+		$this->assertTrue($this->pc->voteUp($ct, $this->u->getId()));
+		$this->assertFalse($this->pc->voteUp($ct, $this->u->getId()));
+		$this->assertTrue($this->pc->voteDown($ct, $this->u->getId()));
+		$this->assertTrue($this->pc->voteDown($ct, $this->u->getId()));
+		$this->assertFalse($this->pc->voteDown($ct, $this->u->getId()));
+
+		$this->pc->delete($ct);
+		$this->pc->delete(new ParaObject("vote:".$this->u->getId().":".$ct->getId(), "vote"));
+
+		$this->assertNotNull($this->pc->getServerVersion());
+		$this->assertNotEquals("unknown", $this->pc->getServerVersion());
 	}
 
 	public function testResourcePermissions() {

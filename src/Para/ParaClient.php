@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright 2013-2016 Erudika. https://erudika.com
+ * Copyright 2013-2017 Erudika. https://erudika.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,6 +110,18 @@ class ParaClient {
 	}
 
 	/**
+	 * @return the version of Para server
+	 */
+	public function getServerVersion() {
+		$res = $this->getEntity($this->invokeGet("", null));
+		if ($res == null || !isset($res["version"])) {
+			return "unknown";
+		} else {
+			return $res["version"];
+		}
+	}
+
+	/**
 	 * @return string|null returns the JWT access token, or null if not signed in
 	 */
 	public function getAccessToken() {
@@ -181,7 +193,7 @@ class ParaClient {
 		if (isset($resourcePath) && strncmp($resourcePath, self::JWT_PATH, strlen(self::JWT_PATH)) == 0) {
 			return $resourcePath;
 		}
-		if (!isset($resourcePath)) {
+		if (!isset($resourcePath) || $resourcePath == null || empty($resourcePath)) {
 			$resourcePath = '';
 		} elseif ($resourcePath[0] === '/') {
 			$resourcePath = substr($resourcePath, 1);
@@ -1011,10 +1023,45 @@ class ParaClient {
 
 	/**
 	 * Returns a User or an App that is currently authenticated.
+	 * @param $jwt a valid JWT access token (optional)
 	 * @return ParaObject User or App
 	 */
-	public function me() {
-		return $this->getEntity($this->invokeGet("_me"), false);
+	public function me($jwt = null) {
+		if ($jwt == null) {
+			return $this->getEntity($this->invokeGet("_me"), false);
+		} else {
+			if (strncmp($jwt, "Bearer", 6) != 0) {
+				$jwt = "Bearer ".$jwt;
+			}
+			return $this->getEntity($this->invokeSignedRequest("GET", $this->getEndpoint(), $this->getFullPath("_me"),
+							array("Authorization" => $jwt), null, null), false);
+		}
+	}
+
+	/**
+	 * Upvote an object and register the vote in DB.
+	 * @param ParaObject $obj the object to receive +1 votes
+	 * @param string $voterid the userid of the voter
+	 * @return bool true if vote was successful
+	 */
+	public function voteUp(ParaObject $obj = null, $voterid = null) {
+		if ($obj == null || $voterid == null) {
+			return false;
+		}
+		return $this->getEntity($this->invokePatch($obj->getType()."/".$obj->getId(), array("_voteup" => $voterid))) == "true";
+	}
+
+	/**
+	 * Downvote an object and register the vote in DB.
+	 * @param ParaObject $obj the object to receive -1 votes
+	 * @param string $voterid the userid of the voter
+	 * @return bool true if vote was successful
+	 */
+	public function voteDown(ParaObject $obj = null, $voterid = null) {
+		if ($obj == null || $voterid == null) {
+			return false;
+		}
+		return $this->getEntity($this->invokePatch($obj->getType()."/".$obj->getId(), array("_votedown" => $voterid))) == "true";
 	}
 
 	/////////////////////////////////////////////
@@ -1189,9 +1236,11 @@ class ParaClient {
 	 * use that as the provider access token.</b>
 	 * @param $provider identity provider, e.g. 'facebook', 'google'...
 	 * @param $providerToken access token from a provider like Facebook, Google, Twitter
+	 * @param $rememberJWT it true the access token returned by Para will be stored locally and
+	 * available through getAccessToken(). True by default.
 	 * @return ParaObject|null a User object or null if something failed
 	 */
-	public function signIn($provider, $providerToken) {
+	public function signIn($provider, $providerToken, $rememberJWT = true) {
 		if ($provider != null && $providerToken != null) {
 			$credentials = array();
 			$credentials["appid"] = $this->accessKey;
@@ -1200,12 +1249,13 @@ class ParaClient {
 			$result = $this->getEntity($this->invokePost(self::JWT_PATH, $credentials));
 			if ($result != null && array_key_exists("user", $result) && array_key_exists("jwt", $result)) {
 				$jwtData = $result["jwt"];
-				$userData = $result["user"];
-				$this->tokenKey = $jwtData["access_token"];
-				$this->tokenKeyExpires = $jwtData["expires"];
-				$this->tokenKeyNextRefresh = $jwtData["refresh"];
+				if ($rememberJWT) {
+					$this->tokenKey = $jwtData["access_token"];
+					$this->tokenKeyExpires = $jwtData["expires"];
+					$this->tokenKeyNextRefresh = $jwtData["refresh"];
+				}
 				$obj = new ParaObject();
-				$obj->setFields($userData);
+				$obj->setFields($result["user"]);
 				return $obj;
 			} else {
 				$this->clearAccessToken();
@@ -1216,7 +1266,7 @@ class ParaClient {
 
 	/**
 	 * Clears the JWT access token but token is not revoked.
-	 * Tokens can be revoked globally per user with {@link #revokeAllTokens()}.
+	 * Tokens can be revoked globally per user with revokeAllTokens().
 	 */
 	public function signOut() {
 		$this->clearAccessToken();
