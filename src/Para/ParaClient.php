@@ -699,8 +699,12 @@ class ParaClient {
 	private function find($queryType = null, $params = array()) {
 		$map = array();
 		if (!empty($params)) {
-			$qType = ($queryType == null) ? "" : "/".$queryType;
-			return $this->getEntity($this->invokeGet("search".$qType, $params));
+			$qType = (empty($queryType)) ? "/default" : "/".$queryType;
+			if (empty($params["type"])) {
+				return $this->getEntity($this->invokeGet("search".$qType, $params));
+			} else {
+				return $this->getEntity($this->invokeGet($params["type"]."/search".$qType, $params));
+			}
 		} else {
 			$map["items"] = array();
 			$map["totalHits"] = 0;
@@ -1209,6 +1213,16 @@ class ParaClient {
 	public function addAppSetting($key, $value) {
 		if (!empty($key) && $value != null) {
 			$this->invokePut("_settings/".$key, array("value" => $value));
+		}
+	}
+
+	/**
+	 * Overwrites all app-specific settings.
+	 * @param $settings a key-value map of properties
+	 */
+	public function setAppSetting(array $settings) {
+		if (!empty($settings)) {
+			$this->invokePut("_settings", $settings);
 		}
 	}
 
