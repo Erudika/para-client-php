@@ -208,17 +208,17 @@ class ParaClient {
 
 	private function invokePost($resourcePath = '/', $entity = array()) {
 		return $this->invokeSignedRequest("POST", $this->getEndpoint(),
-						$this->getFullPath($resourcePath), null, null, empty($entity) ? null : json_encode($entity));
+						$this->getFullPath($resourcePath), null, null, $entity == null ? null : json_encode($entity));
 	}
 
 	private function invokePut($resourcePath = '/', $entity = array()) {
 		return $this->invokeSignedRequest("PUT", $this->getEndpoint(),
-						$this->getFullPath($resourcePath), null, null, empty($entity) ? null : json_encode($entity));
+						$this->getFullPath($resourcePath), null, null, $entity == null ? null : json_encode($entity));
 	}
 
 	private function invokePatch($resourcePath = '/', $entity = array()) {
 		return $this->invokeSignedRequest("PATCH", $this->getEndpoint(),
-						$this->getFullPath($resourcePath), null, null, empty($entity) ? null : json_encode($entity));
+						$this->getFullPath($resourcePath), null, null, $entity == null ? null : json_encode($entity));
 	}
 
 	private function invokeDelete($resourcePath = '/', $params = array()) {
@@ -1211,7 +1211,7 @@ class ParaClient {
 	 * @param $value a value
 	 */
 	public function addAppSetting($key, $value) {
-		if (!empty($key) && $value != null) {
+		if (!empty(trim($key)) && $value != null) {
 			$this->invokePut("_settings/".$key, array("value" => $value));
 		}
 	}
@@ -1220,8 +1220,8 @@ class ParaClient {
 	 * Overwrites all app-specific settings.
 	 * @param $settings a key-value map of properties
 	 */
-	public function setAppSetting(array $settings) {
-		if (!empty($settings)) {
+	public function setAppSettings($settings) {
+		if ($settings != null) {
 			$this->invokePut("_settings", $settings);
 		}
 	}

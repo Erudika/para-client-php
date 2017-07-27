@@ -47,7 +47,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 	protected $a2;
 
 	protected function setUp() {
-		$this->pc = new ParaClient("app:para", "o24K97DuMnRQkI5tGmuQcLiPzWEeoZBQ2FGJdac/ekujQ//lK4LmVw==");
+		$this->pc = new ParaClient("app:para", "vuDSthF9QbMHh83SjB1AaeNM0npAoRwE19Q9EXHduYffkd2TmlchUw==");
 		$this->pc->setEndpoint("http://localhost:8080");
 		$this->pc2 = new ParaClient("app:para", null);
 		$this->pc2->setEndpoint("http://localhost:8080");
@@ -89,10 +89,10 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 		$this->a2->latlng = "40.69,-73.95";
 
 		$this->s1 = new ParaObject("s1");
-		$this->s1->setName("This is a little test sentence. Testing, one, two, three.");
+		$this->s1->text = "This is a little test sentence. Testing, one, two, three.";
 
 		$this->s2 = new ParaObject("s2");
-		$this->s2->setName("We are testing this thing. This sentence is a test. One, two.");
+		$this->s2->text = "We are testing this thing. This sentence is a test. One, two.";
 
 		$this->pc->createAll(array($this->u, $this->u1, $this->u2, $this->t, $this->s1, $this->s2, $this->a1, $this->a2));
 	}
@@ -262,13 +262,13 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertTrue(empty($this->pc->findPrefix(null, null, "")));
 		$this->assertTrue(empty($this->pc->findPrefix("", "null", "xx")));
-		$this->assertFalse(empty($this->pc->findPrefix($this->u->getType(), "name", "ann")));
+		$this->assertFalse(empty($this->pc->findPrefix($this->u->getType(), "name", "Ann")));
 
 		//$this->assertFalse(empty($this->pc->findQuery(null, null)));
 		$this->assertFalse(empty($this->pc->findQuery("", "*")));
 		$this->assertEquals(2, sizeof($this->pc->findQuery($this->a1->getType(), "country:US")));
-		$this->assertFalse(empty($this->pc->findQuery($this->u->getType(), "ann")));
-		$this->assertFalse(empty($this->pc->findQuery($this->u->getType(), "Ann")));
+		$this->assertFalse(empty($this->pc->findQuery($this->u->getType(), "Ann*")));
+		$this->assertFalse(empty($this->pc->findQuery($this->u->getType(), "Ann*")));
 		$this->assertTrue(sizeof($this->pc->findQuery(null, "*")) > 4);
 
 		$p = new Pager();
@@ -279,7 +279,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertTrue(empty($this->pc->findSimilar($this->t->getType(), "", null, null)));
 		$this->assertTrue(empty($this->pc->findSimilar($this->t->getType(), "", array(), "")));
-		$res = $this->pc->findSimilar($this->s1->getType(), $this->s1->getId(), array("name"), $this->s1->getName());
+		$res = $this->pc->findSimilar($this->s1->getType(), $this->s1->getId(), array("properties.text"), $this->s1->text);
 		$this->assertFalse(empty($res));
 		$this->assertEquals($this->s2->getId(), $res[0]->getId());
 
@@ -333,7 +333,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertTrue(empty($this->pc->findWildcard($this->u->getType(), null, null)));
 		$this->assertTrue(empty($this->pc->findWildcard($this->u->getType(), "", "")));
-		$this->assertFalse(empty($this->pc->findWildcard($this->u->getType(), "name", "an*")));
+		$this->assertFalse(empty($this->pc->findWildcard($this->u->getType(), "name", "An*")));
 
 		$this->assertTrue($this->pc->getCount(null) > 4);
 		$this->assertNotEquals(0, $this->pc->getCount(""));
@@ -390,7 +390,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 		$st1 = $this->pc->stripAndTrim(" %^&*( cool )		@!");
 		$this->assertEquals("cool", $st1);
 
-		$md1 = $this->pc->markdownToHtml("#hello **test**");
+		$md1 = $this->pc->markdownToHtml("# hello **test**");
 		$this->assertEquals("<h1>hello <strong>test</strong></h1>\n", $md1);
 
 		$ht1 = $this->pc->approximately(15000);
@@ -548,6 +548,8 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals(2, sizeof($this->pc->appSettings()));
 		$this->pc->removeAppSetting("prop2");
 		$this->pc->removeAppSetting("prop1");
+		$this->pc->setAppSettings(new \stdClass());
+		$this->assertTrue(empty($this->pc->appSettings()));
 	}
 
 	public function testAccessTokens() {
