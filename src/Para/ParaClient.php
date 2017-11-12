@@ -158,7 +158,13 @@ class ParaClient {
 		$this->tokenKeyNextRefresh = null;
 	}
 
-	private function getEntity(Response $res = null, $returnArray = true) {
+	/**
+	 * Deserializes a Response object to POJO of some type.
+	 * @param Response $res response
+	 * @param bool $returnArray true if an array should be returned
+	 * @return ParaObject an object
+	 */
+	public function getEntity(Response $res = null, $returnArray = true) {
 		if ($res != null) {
 			$code = $res->getStatusCode();
 			if ($code === 200 || $code === 201 || $code === 304) {
@@ -189,7 +195,11 @@ class ParaClient {
 		return null;
 	}
 
-	private function getFullPath($resourcePath) {
+	/**
+	 * @param string $resourcePath API subpath
+	 * @return string the full resource path, e.g. "/v1/path"
+	 */
+	protected function getFullPath($resourcePath) {
 		if (isset($resourcePath) && strncmp($resourcePath, self::JWT_PATH, strlen(self::JWT_PATH)) == 0) {
 			return $resourcePath;
 		}
@@ -201,32 +211,62 @@ class ParaClient {
 		return $this->getApiPath().$resourcePath;
 	}
 
-	private function invokeGet($resourcePath = '/', $params = array()) {
+	/**
+	 * Invoke a GET request to the Para API.
+	 * @param string $resourcePath the subpath after '/v1/', should not start with '/'
+	 * @param array $params query parameters
+	 * @return Response response object
+	 */
+	public function invokeGet($resourcePath = '/', $params = array()) {
 		return $this->invokeSignedRequest("GET", $this->getEndpoint(),
 						$this->getFullPath($resourcePath), null, $params);
 	}
 
-	private function invokePost($resourcePath = '/', $entity = array()) {
+	/**
+	 * Invoke a POST request to the Para API.
+	 * @param string $resourcePath the subpath after '/v1/', should not start with '/'
+	 * @param array $entity request body
+	 * @return Response response object
+	 */
+	public function invokePost($resourcePath = '/', $entity = array()) {
 		return $this->invokeSignedRequest("POST", $this->getEndpoint(),
 						$this->getFullPath($resourcePath), null, null, $entity == null ? null : json_encode($entity));
 	}
 
-	private function invokePut($resourcePath = '/', $entity = array()) {
+	/**
+	 * Invoke a PUT request to the Para API.
+	 * @param string $resourcePath the subpath after '/v1/', should not start with '/'
+	 * @param array $entity request body
+	 * @return Response response object
+	 */
+	public function invokePut($resourcePath = '/', $entity = array()) {
 		return $this->invokeSignedRequest("PUT", $this->getEndpoint(),
 						$this->getFullPath($resourcePath), null, null, $entity == null ? null : json_encode($entity));
 	}
 
-	private function invokePatch($resourcePath = '/', $entity = array()) {
+	/**
+	 * Invoke a PATCH request to the Para API.
+	 * @param string $resourcePath the subpath after '/v1/', should not start with '/'
+	 * @param array $entity request body
+	 * @return Response response object
+	 */
+	public function invokePatch($resourcePath = '/', $entity = array()) {
 		return $this->invokeSignedRequest("PATCH", $this->getEndpoint(),
 						$this->getFullPath($resourcePath), null, null, $entity == null ? null : json_encode($entity));
 	}
 
-	private function invokeDelete($resourcePath = '/', $params = array()) {
+	/**
+	 * Invoke a DELETE request to the Para API.
+	 * @param string $resourcePath the subpath after '/v1/', should not start with '/'
+	 * @param array $params query parameters
+	 * @return Response response object
+	 */
+	public function invokeDelete($resourcePath = '/', $params = array()) {
 		return $this->invokeSignedRequest("DELETE", $this->getEndpoint(),
 						$this->getFullPath($resourcePath), null, $params);
 	}
 
-	private function invokeSignedRequest($httpMethod, $endpointURL, $reqPath,
+	protected function invokeSignedRequest($httpMethod, $endpointURL, $reqPath,
 					$headers = array(), $params = array(), $jsonEntity = null) {
 
 		if (empty($this->accessKey)) {
@@ -279,12 +319,20 @@ class ParaClient {
 		return null;
 	}
 
-	private function pagerToParams(Pager $p = null) {
+	/**
+	 * Converts a {@link Pager} object to query parameters.
+	 * @param Pager $p a pager
+	 * @return array a list of query parameters
+	 */
+	public function pagerToParams(Pager $p = null) {
 		$map = array();
 		if ($p !== null) {
 			$map["page"] = $p->page;
 			$map["desc"] = $p->desc;
 			$map["limit"] = $p->limit;
+			if ($p->lastKey != null) {
+				$map["lastKey"] = $p->lastKey;
+			}
 			if ($p->sortby != null) {
 				$map["sort"] = $p->sortby;
 			}
@@ -292,7 +340,12 @@ class ParaClient {
 		return $map;
 	}
 
-	private function getItemsFromList($result = array()) {
+	/**
+	 * Deserializes ParaObjects from a JSON array (the "items:[]" field in search results).
+	 * @param array $result a list of deserialized arrays
+	 * @return array a list of ParaObjects
+	 */
+	public function getItemsFromList($result = array()) {
 		if (!empty($result)) {
 			// this isn't very efficient but there's no way to know what type of objects we're reading
 			$objects = array();
@@ -308,18 +361,32 @@ class ParaClient {
 		return array();
 	}
 
-	private function getItems($result, Pager $pager = null) {
-		if ($result != null && array_key_exists("items", $result)) {
+	/**
+	 * Converts a list of Maps to a List of ParaObjects, at a given path within the JSON tree structure.
+	 * @param array $result the response body for an API request
+	 * @param string $at the path (field) where the array of objects is located (defaults to 'items')
+	 * @param Pager $pager a pager
+	 * @return array a list of ParaObjects
+	 */
+	public function getItemsAt($result, $at = "items", Pager $pager = null) {
+		if ($result != null && $at != null && array_key_exists($at, $result)) {
 			if ($pager !== null && array_key_exists("totalHits", $result)) {
 				$pager->count = $result["totalHits"];
+			}
+			if ($pager !== null && array_key_exists("lastKey", $result)) {
+				$pager->lastKey = $result["lastKey"];
 			}
 			if (gettype($result) === "object") {
 				return $this->getItemsFromList($result->items);
 			} else {
-				return $this->getItemsFromList($result["items"]);
+				return $this->getItemsFromList($result[$at]);
 			}
 		}
 		return array();
+	}
+
+	private function getItems($result, Pager $pager = null) {
+		return $this->getItemsAt($result, "items", $pager);
 	}
 
 	/////////////////////////////////////////////

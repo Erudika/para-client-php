@@ -47,7 +47,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 	protected $a2;
 
 	protected function setUp() {
-		$this->pc = new ParaClient("app:para", "vuDSthF9QbMHh83SjB1AaeNM0npAoRwE19Q9EXHduYffkd2TmlchUw==");
+		$this->pc = new ParaClient("app:para", "xC2/S0vrq41lYlFliGmKfmuuQBe1ixf2DXbgzbCq0q6TIu6W66uH3g==");
 		$this->pc->setEndpoint("http://localhost:8080");
 		$this->pc2 = new ParaClient("app:para", null);
 		$this->pc2->setEndpoint("http://localhost:8080");
