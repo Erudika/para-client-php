@@ -60,7 +60,7 @@ class ParaClient {
 
 	/**
 	 * Sets the API endpoint URL
-	 * @param $string endpoint URL
+	 * @param $endpoint endpoint URL
 	 */
 	public function setEndpoint($endpoint) {
 		$this->endpoint = $endpoint;
@@ -189,6 +189,8 @@ class ParaClient {
 				if ($error != null && $error["code"] != null) {
 					$msg = $error["message"] != null ? $error["message"] : "error";
 					error_log($msg." - ".$error["code"], 0);
+				} else {
+					error_log($code." - ".$res->getReasonPhrase(), 0);
 				}
 			}
 		}
