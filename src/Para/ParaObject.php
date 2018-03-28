@@ -35,6 +35,7 @@ class ParaObject {
 	private $name = "ParaObject";
 	private $tags = array();
 	private $votes = 0;
+	private $version = 0;
 	private $stored = true;
 	private $indexed = true;
 	private $cached = true;
@@ -248,6 +249,20 @@ class ParaObject {
 	}
 
 	/**
+	 * @return version number
+	 */
+	public function getVersion() {
+		return $this->version;
+	}
+
+	/**
+	 * @param $version version
+	 */
+	public function setVersion($version) {
+		$this->version = $version;
+	}
+
+	/**
 	 * Boolean flag which controls whether this object is stored
 	 * in the database or not. Default is true.
 	 *
@@ -279,7 +294,7 @@ class ParaObject {
 	/**
 	 * Sets the "isIndexed" flag.
 	 *
-	 * @param isIndexed when set to true, object is indexed.
+	 * @param $isIndexed when set to true, object is indexed.
 	 */
 	public function setIndexed($isIndexed = true) {
 		$this->indexed = $isIndexed;
@@ -298,7 +313,7 @@ class ParaObject {
 	/**
 	 * Sets the "isCached" flag.
 	 *
-	 * @param isCached when set to true, object is cached.
+	 * @param $isCached when set to true, object is cached.
 	 */
 	public function setCached($isCached = true) {
 		$this->cached = $isCached;
