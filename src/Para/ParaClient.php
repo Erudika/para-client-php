@@ -1137,6 +1137,20 @@ class ParaClient {
 		return $this->getEntity($this->invokePatch($obj->getType()."/".$obj->getId(), array("_votedown" => $voterid))) == "true";
 	}
 
+	/**
+	 * Rebuilds the entire search index.
+	 * @param string $destinationIndex an existing index as destination
+	 * @return array a response object with properties "tookMillis" and "reindexed"
+	 */
+	public function rebuildIndex($destinationIndex = null) {
+		if ($destinationIndex == null) {
+			return $this->getEntity($this->invokePost("_reindex"));
+		} else {
+			return $this->getEntity($this->invokeSignedRequest("POST", $this->getEndpoint(), $this->getFullPath("_reindex"),
+							null, array("destinationIndex" => $destinationIndex), null), true);
+		}
+	}
+
 	/////////////////////////////////////////////
 	//			Validation Constraints
 	/////////////////////////////////////////////
