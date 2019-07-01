@@ -407,9 +407,9 @@ class ParaClient {
 			return null;
 		}
 		if ($obj->getId() == null || $obj->getType() == null) {
-			return $this->getEntity($this->invokePost($obj->getType(), $obj->jsonSerialize()), false);
+			return $this->getEntity($this->invokePost(urlencode($obj->getType()), $obj->jsonSerialize()), false);
 		} else {
-			return $this->getEntity($this->invokePut($obj->getType()."/".$obj->getId(), $obj->jsonSerialize()), false);
+			return $this->getEntity($this->invokePut($obj->getObjectURI(), $obj->jsonSerialize()), false);
 		}
 	}
 
@@ -424,9 +424,9 @@ class ParaClient {
 			return null;
 		}
 		if ($type == null) {
-			return $this->getEntity($this->invokeGet("_id/".$id), false);
+			return $this->getEntity($this->invokeGet("_id/".urlencode($id)), false);
 		} else {
-			return $this->getEntity($this->invokeGet($type."/".$id), false);
+			return $this->getEntity($this->invokeGet(urlencode($type)."/".urlencode($id)), false);
 		}
 	}
 
@@ -521,7 +521,7 @@ class ParaClient {
 		if ($type == null) {
 			return array();
 		}
-		return $this->getItems($this->getEntity($this->invokeGet($type, $this->pagerToParams($pager))), $pager);
+		return $this->getItems($this->getEntity($this->invokeGet(urlencode($type), $this->pagerToParams($pager))), $pager);
 	}
 
 	/////////////////////////////////////////////
@@ -798,7 +798,7 @@ class ParaClient {
 		$params = array();
 		$params["count"] = "true";
 		$pager = new Pager();
-		$url = $obj->getObjectURI()."/links/".$type2;
+		$url = $obj->getObjectURI()."/links/".urlencode($type2);
 		$this->getItems($this->getEntity($this->invokeGet($url, $params)), $pager);
 		return $pager->count;
 	}
@@ -814,7 +814,7 @@ class ParaClient {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
 			return array();
 		}
-		$url = $obj->getObjectURI()."/links/".$type2;
+		$url = $obj->getObjectURI()."/links/".urlencode($type2);
 		return $this->getItems($this->getEntity($this->invokeGet($url), $this->pagerToParams($pager)), $pager);
 	}
 
@@ -836,7 +836,7 @@ class ParaClient {
 		$params["field"] = $field;
 		$params["q"] = $query;
 		array_merge($params, $this->pagerToParams($pager));
-		$url = $obj->getObjectURI()."/links/".$type2;
+		$url = $obj->getObjectURI()."/links/".urlencode($type2);
 		return $this->getItems($this->getEntity($this->invokeGet($url), $params), $pager);
 	}
 
@@ -851,7 +851,7 @@ class ParaClient {
 		if ($obj == null || $obj->getId() == null || $type2 == null || $id2 == null) {
 			return false;
 		}
-		$url = $obj->getObjectURI()."/links/".$type2."/".$id2;
+		$url = $obj->getObjectURI()."/links/".urlencode($type2)."/".urlencode($id2);
 		return $this->getEntity($this->invokeGet($url)) == "true";
 	}
 
@@ -880,7 +880,7 @@ class ParaClient {
 		if ($obj == null || $obj->getId() == null || $id2 == null) {
 			return null;
 		}
-		$url = $obj->getObjectURI()."/links/".$id2;
+		$url = $obj->getObjectURI()."/links/".urlencode($id2);
 		return $this->getEntity($this->invokePost($url));
 	}
 
@@ -895,7 +895,7 @@ class ParaClient {
 		if ($obj == null || $obj->getId() == null || $type2 == null || $id2 == null) {
 			return;
 		}
-		$url = $obj->getObjectURI()."/links/".$type2."/".$id2;
+		$url = $obj->getObjectURI()."/links/".urlencode($type2)."/".urlencode($id2);
 		$this->invokeDelete($url);
 	}
 
@@ -927,7 +927,7 @@ class ParaClient {
 		$params["count"] = "true";
 		$params["childrenonly"] = "true";
 		$pager = new Pager();
-		$url = $obj->getObjectURI()."/links/".$type2;
+		$url = $obj->getObjectURI()."/links/".urlencode($type2);
 		$this->getItems($this->getEntity($this->invokeGet($url, $params)), $pager);
 		return $pager->count;
 	}
@@ -954,7 +954,7 @@ class ParaClient {
 			$params["term"] = $term;
 		}
 		array_merge($params, $this->pagerToParams($pager));
-		$url = $obj->getObjectURI()."/links/".$type2;
+		$url = $obj->getObjectURI()."/links/".urlencode($type2);
 		return $this->getItems($this->getEntity($this->invokeGet($url, $params)), $pager);
 	}
 
@@ -975,7 +975,7 @@ class ParaClient {
 		$params["childrenonly"] = "true";
 		$params["q"] = $query;
 		array_merge($params, $this->pagerToParams($pager));
-		$url = $obj->getObjectURI()."/links/".$type2;
+		$url = $obj->getObjectURI()."/links/".urlencode($type2);
 		return $this->getItems($this->getEntity($this->invokeGet($url, $params)), $pager);
 	}
 
@@ -990,7 +990,7 @@ class ParaClient {
 		}
 		$params = array();
 		$params["childrenonly"] = "true";
-		$url = $obj->getObjectURI()."/links/".$type2;
+		$url = $obj->getObjectURI()."/links/".urlencode($type2);
 		$this->invokeDelete($url, $params);
 	}
 
@@ -1121,7 +1121,7 @@ class ParaClient {
 		if ($obj == null || $voterid == null) {
 			return false;
 		}
-		return $this->getEntity($this->invokePatch($obj->getType()."/".$obj->getId(), array("_voteup" => $voterid))) == "true";
+		return $this->getEntity($this->invokePatch($obj->getObjectURI(), array("_voteup" => $voterid))) == "true";
 	}
 
 	/**
@@ -1134,7 +1134,7 @@ class ParaClient {
 		if ($obj == null || $voterid == null) {
 			return false;
 		}
-		return $this->getEntity($this->invokePatch($obj->getType()."/".$obj->getId(), array("_votedown" => $voterid))) == "true";
+		return $this->getEntity($this->invokePatch($obj->getObjectURI(), array("_votedown" => $voterid))) == "true";
 	}
 
 	/**
@@ -1161,7 +1161,7 @@ class ParaClient {
 	 * @return array a map containing all validation constraints.
 	 */
 	public function validationConstraints($type = "") {
-		return $this->getEntity($this->invokeGet("_constraints/".$type));
+		return $this->getEntity($this->invokeGet("_constraints/".urlencode($type)));
 	}
 
 	/**
@@ -1175,7 +1175,7 @@ class ParaClient {
 		if ($type == null || $field == null || $c == null) {
 			return array();
 		}
-		return $this->getEntity($this->invokePut("_constraints/".$type."/".$field."/".$c->getName(), $c->getPayload()));
+		return $this->getEntity($this->invokePut("_constraints/".urlencode($type)."/".$field."/".$c->getName(), $c->getPayload()));
 	}
 
 	/**
@@ -1189,7 +1189,7 @@ class ParaClient {
 		if ($type == null || $field == null || $constraintName == null) {
 			return array();
 		}
-		return $this->getEntity($this->invokeDelete("_constraints/".$type."/".$field."/".$constraintName));
+		return $this->getEntity($this->invokeDelete("_constraints/".urlencode($type)."/".$field."/".$constraintName));
 	}
 
 	/////////////////////////////////////////////
@@ -1206,7 +1206,7 @@ class ParaClient {
 		if ($subjectid == null) {
 			return $this->getEntity($this->invokeGet("_permissions"));
 		} else {
-			return $this->getEntity($this->invokeGet("_permissions/".$subjectid));
+			return $this->getEntity($this->invokeGet("_permissions/".urlencode($subjectid)));
 		}
 	}
 
@@ -1226,7 +1226,7 @@ class ParaClient {
 			array_push($permission, "?");
 		}
 		$resourcePath = urlencode($resourcePath);
-		return $this->getEntity($this->invokePut("_permissions/".$subjectid."/".$resourcePath, $permission));
+		return $this->getEntity($this->invokePut("_permissions/".urlencode($subjectid)."/".$resourcePath, $permission));
 	}
 
 	/**
@@ -1240,7 +1240,7 @@ class ParaClient {
 			return array();
 		}
 		$resourcePath = urlencode($resourcePath);
-		return $this->getEntity($this->invokeDelete("_permissions/".$subjectid."/".$resourcePath));
+		return $this->getEntity($this->invokeDelete("_permissions/".urlencode($subjectid)."/".$resourcePath));
 	}
 
 	/**
@@ -1252,7 +1252,7 @@ class ParaClient {
 		if ($subjectid == null) {
 			return array();
 		}
-		return $this->getEntity($this->invokeDelete("_permissions/".$subjectid));
+		return $this->getEntity($this->invokeDelete("_permissions/".urlencode($subjectid)));
 	}
 
 	/**
@@ -1267,7 +1267,7 @@ class ParaClient {
 			return false;
 		}
 		$resourcePath = urlencode($resourcePath);
-		$url = "_permissions/".$subjectid."/".$resourcePath."/".$httpMethod;
+		$url = "_permissions/".urlencode($subjectid)."/".$resourcePath."/".$httpMethod;
 		return $this->getEntity($this->invokeGet($url)) == "true";
 	}
 

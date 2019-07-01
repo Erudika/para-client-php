@@ -156,23 +156,12 @@ class ParaObject {
 	}
 
 	/**
-	 * The plural name of the object. For example: user - users.
-	 *
-	 * @return the plural name
-	 */
-	public function getPlural() {
-		return ($this->type == null) ? $this->type :
-						($this->type[strlen($this->type) - 1] === 's') ? $this->type."es" :
-						($this->type[strlen($this->type) - 1] === 'y') ? substr_replace($this->type, "ies", -1) : $this->type."s";
-	}
-
-	/**
 	 * The URI of this object. For example: /users/123.
 	 *
 	 * @return the URI
 	 */
 	public function getObjectURI() {
-		$def = "/".$this->getPlural();
+		$def = "/".$this->getType();
 		return ($this->id != null) ? $def."/".$this->id : $def;
 	}
 
