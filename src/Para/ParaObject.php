@@ -161,8 +161,8 @@ class ParaObject {
 	 * @return the URI
 	 */
 	public function getObjectURI() {
-		$def = "/".$this->getType();
-		return ($this->id != null) ? $def."/".$this->id : $def;
+		$def = "/".urlencode($this->getType());
+		return ($this->id != null) ? $def."/".urlencode($this->id) : $def;
 	}
 
 	/**
