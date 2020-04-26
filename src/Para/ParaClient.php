@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright 2013-2019 Erudika. https://erudika.com
+ * Copyright 2013-2020 Erudika. https://erudika.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -815,7 +815,7 @@ class ParaClient {
 			return array();
 		}
 		$url = $obj->getObjectURI()."/links/".urlencode($type2);
-		return $this->getItems($this->getEntity($this->invokeGet($url), $this->pagerToParams($pager)), $pager);
+		return $this->getItems($this->getEntity($this->invokeGet($url, $this->pagerToParams($pager))), $pager);
 	}
 
 	/**
@@ -837,7 +837,7 @@ class ParaClient {
 		$params["q"] = $query;
 		array_merge($params, $this->pagerToParams($pager));
 		$url = $obj->getObjectURI()."/links/".urlencode($type2);
-		return $this->getItems($this->getEntity($this->invokeGet($url), $params), $pager);
+		return $this->getItems($this->getEntity($this->invokeGet($url, $params)), $pager);
 	}
 
 	/**
