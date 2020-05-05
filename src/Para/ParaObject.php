@@ -330,8 +330,10 @@ class ParaObject {
 	 * @return \Para\ParaObject
 	 */
 	public function setFields($map = array()) {
-		foreach ($map as $key => $value) {
-			$this->$key = $value;
+		if (is_array($map)) {
+			foreach ($map as $key => $value) {
+				$this->$key = $value;
+			}
 		}
 		return $this;
 	}

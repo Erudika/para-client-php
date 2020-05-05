@@ -168,8 +168,8 @@ class ParaClient {
 		if ($res != null) {
 			$code = $res->getStatusCode();
 			if ($code === 200 || $code === 201 || $code === 304) {
+				$body = $res->getBody()->getContents();
 				if ($returnArray) {
-					$body = $res->getBody()->getContents();
 					try {
 						if ($body === "{}" || $body === "{ }") {
 							return array();
@@ -181,11 +181,11 @@ class ParaClient {
 					}
 				} else {
 					$obj = new ParaObject();
-					$obj->setFields(json_decode($res->getBody(), true));
+					$obj->setFields(json_decode($body, true));
 					return $obj;
 				}
 			} else if ($code !== 404 || $code !== 304 || $code !== 204) {
-				$error = json_decode($res->getBody(), true);
+				$error = json_decode($res->getBody()->getContents(), true);
 				if ($error != null && $error["code"] != null) {
 					$msg = $error["message"] != null ? $error["message"] : "error";
 					error_log($msg." - ".$error["code"], 0);
@@ -303,6 +303,8 @@ class ParaClient {
 			}
 			$headers["Authorization"] = "Bearer ".$this->tokenKey;
 		}
+		$headers["User-Agent"] = "Para client for PHP";
+		$headers["Content-Type"] = "application/json";
 		// only sign some of the query parameters
 		$queryString = empty($query) ? "" : "?" . \GuzzleHttp\Psr7\build_query($query);
 		$req = new Request($httpMethod, $endpointURL . $reqPath . $queryString, $headers, $jsonEntity);

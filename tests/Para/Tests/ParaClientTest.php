@@ -29,7 +29,7 @@ use Para\Constraint;
  *
  * @author Alex Bogdanovski [alex@erudika.com]
  */
-class ParaClientTest extends \PHPUnit_Framework_TestCase {
+class ParaClientTest extends \PHPUnit\Framework\TestCase {
 
 	private $pc;
 	private $pc2;
@@ -46,8 +46,8 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 	protected $a1;
 	protected $a2;
 
-	protected function setUp() {
-		$this->pc = new ParaClient("app:para", "xC2/S0vrq41lYlFliGmKfmuuQBe1ixf2DXbgzbCq0q6TIu6W66uH3g==");
+	protected function setUp(): void {
+		$this->pc = new ParaClient("app:para", "xrNQ+OHeZITgWV2w2rFy48LlQROUEijhFMPE99Yfv9EJVXGghfS5SA==");
 		$this->pc->setEndpoint("http://localhost:8080");
 		$this->pc2 = new ParaClient("app:para", null);
 		$this->pc2->setEndpoint("http://localhost:8080");
@@ -97,7 +97,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 		$this->pc->createAll(array($this->u, $this->u1, $this->u2, $this->t, $this->s1, $this->s2, $this->a1, $this->a2));
 	}
 
-	protected function tearDown() {
+	protected function tearDown(): void {
 	}
 
 	public function testCRUD() {
@@ -421,6 +421,7 @@ class ParaClientTest extends \PHPUnit_Framework_TestCase {
 
 		$this->pc->addValidationConstraint($kittenType, "paws", Constraint::required());
 		$constraint = $this->pc->validationConstraints($kittenType);
+		$this->assertTrue(array_key_exists($kittenType, $constraint));
 		$this->assertTrue(array_key_exists("paws", $constraint[$kittenType]));
 
 		$ct = new ParaObject("felix");

@@ -6,8 +6,5 @@
         </testsuite>
     </testsuites>
     <filter>
-        <blacklist>
-            <file>systemlib.phpreflection_hni</file>
-        </blacklist>
     </filter>
 </phpunit>
