@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright 2013-2020 Erudika. https://erudika.com
+ * Copyright 2013-2021 Erudika. https://erudika.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1090,10 +1090,18 @@ class ParaClient {
 
 	/**
 	 * Returns all registered types for this App.
-	 * @return array a map of plural-singular form of all the registered types.
+	 * @return array a map of singular object type to object count.
 	 */
 	public function types() {
 		return $this->getEntity($this->invokeGet("_types"));
+	}
+
+	/**
+	 * Returns the number of objects for each existing type in this App.
+	 * @return array a map of plural-singular form of all the registered types.
+	 */
+	public function typesCount() {
+		return $this->getEntity($this->invokeGet("_types", array("count" => "true")));
 	}
 
 	/**
