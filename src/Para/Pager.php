@@ -33,6 +33,7 @@ class Pager {
 	public $limit = 30;
 	public $name = "";
 	public $lastKey = null;
+    public $select = null;
 
 	public function __construct($page = 1, $sortby = null, $desc = true, $limit = 30) {
 		$this->page = $page;

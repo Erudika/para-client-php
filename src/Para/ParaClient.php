@@ -340,6 +340,9 @@ class ParaClient {
 			if ($p->sortby != null) {
 				$map["sort"] = $p->sortby;
 			}
+            if ($p->select != null && !empty($p->select)) {
+				$map["select"] = $p->select;
+			}
 		}
 		return $map;
 	}
