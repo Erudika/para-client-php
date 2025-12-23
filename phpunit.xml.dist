@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit colors="true" bootstrap="vendor/autoload.php">
+<phpunit 
+        colors="true" 
+        bootstrap="vendor/autoload.php"
+        displayDetailsOnTestsThatTriggerDeprecations="true"
+        displayDetailsOnTestsThatTriggerErrors="true"
+        displayDetailsOnTestsThatTriggerNotices="true"
+        displayDetailsOnTestsThatTriggerWarnings="true"
+        displayDetailsOnPhpunitDeprecations="true">
     <testsuites>
         <testsuite name="Para">
           <directory>tests/</directory>
         </testsuite>
     </testsuites>
-    <filter>
-    </filter>
 </phpunit>

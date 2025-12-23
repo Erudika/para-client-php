@@ -1,0 +1,13 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    bootstrapFiles:
+        - vendor/autoload.php
+    tmpDir: var/phpstan
+    checkMissingIterableValueType: true
+    treatPhpDocTypesAsCertain: true
+    reportUnmatchedIgnoredErrors: true
+    parallel:
+        maximumNumberOfProcesses: 1

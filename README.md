@@ -15,6 +15,11 @@ This is the PHP client for Para.
 
 ### Quick start
 
+**Prerequisites**:
+
+- PHP 8.1+
+- [Composer](https://getcomposer.org/download/)
+
 1. Use [Composer](https://getcomposer.org/doc/00-intro.md) and include `para-client-php` as a dependency.
 If you don't use Composer, you can copy the `index.php` file and the `src` directory to your project.
 2. Add `erudika/para-client-php` to your `composer.json` file:
@@ -44,4 +49,5 @@ $client = new \Para\ParaClient('ACCESS_KEY', 'SECRET_KEY');
 For more information see [CONTRIBUTING.md](https://github.com/Erudika/para/blob/master/CONTRIBUTING.md)
 
 ## License
+
 [Apache 2.0](LICENSE)

@@ -18,11 +18,13 @@
  * For issues and patches go to: https://github.com/erudika
  */
 namespace Para;
+use AllowDynamicProperties;
 
 /**
  * A basic object for storing data - ParaObject.
  * @author Alex Bogdanovski [alex@erudika.com]
  */
+#[AllowDynamicProperties]
 class ParaObject {
 
 	private $id;

@@ -306,7 +306,7 @@ class ParaClient {
 		$headers["User-Agent"] = "Para client for PHP";
 		$headers["Content-Type"] = "application/json";
 		// only sign some of the query parameters
-		$queryString = empty($query) ? "" : "?" . \GuzzleHttp\Psr7\build_query($query);
+		$queryString = empty($query) ? "" : "?" . \GuzzleHttp\Psr7\Query::build($query);
 		$req = new Request($httpMethod, $endpointURL . $reqPath . $queryString, $headers, $jsonEntity);
 
 		if ($doSign) {
@@ -314,7 +314,7 @@ class ParaClient {
 			$req = $sig->signRequest($req, new Credentials($this->accessKey, $this->secretKey));
 		}
 		// send all query parameters to the server
-		$queryString = ($params == null) ? "" : \GuzzleHttp\Psr7\build_query($params);
+		$queryString = ($params == null) ? "" : \GuzzleHttp\Psr7\Query::build($params);
 		try {
 			return $this->apiClient->send($req, array(RequestOptions::QUERY => $queryString));
 		} catch (\Exception $ex) {
@@ -375,7 +375,7 @@ class ParaClient {
 	 * @param Pager $pager a pager
 	 * @return array a list of ParaObjects
 	 */
-	public function getItemsAt($result, $at = "items", Pager $pager = null) {
+	public function getItemsAt($result, $at = "items", ?Pager $pager = null) {
 		if ($result != null && $at != null && array_key_exists($at, $result)) {
 			if ($pager !== null && array_key_exists("totalHits", $result)) {
 				$pager->count = $result["totalHits"];
@@ -384,7 +384,7 @@ class ParaClient {
 				$pager->lastKey = $result["lastKey"];
 			}
 			if (gettype($result) === "object") {
-				return $this->getItemsFromList($result->items);
+				return $this->getItemsFromList(((object) $result)->items);
 			} else {
 				return $this->getItemsFromList($result[$at]);
 			}
@@ -392,7 +392,7 @@ class ParaClient {
 		return array();
 	}
 
-	private function getItems($result, Pager $pager = null) {
+	private function getItems($result, ?Pager $pager = null) {
 		return $this->getItemsAt($result, "items", $pager);
 	}
 
@@ -407,7 +407,7 @@ class ParaClient {
 	 * @param $obj the domain object
 	 * @return ParaObject|null the same object with assigned id or null if not created.
 	 */
-	public function create(ParaObject $obj = null) {
+	public function create(ParaObject $obj) {
 		if ($obj == null) {
 			return null;
 		}
@@ -440,7 +440,7 @@ class ParaClient {
 	 * @param $obj the object to update
 	 * @return the updated object
 	 */
-	public function update(ParaObject $obj = null) {
+	public function update(ParaObject $obj) {
 		if ($obj == null) {
 			return null;
 		}
@@ -451,7 +451,7 @@ class ParaClient {
 	 * Deletes an object permanently.
 	 * @param $obj the object
 	 */
-	public function delete(ParaObject $obj = null) {
+	public function delete(ParaObject $obj) {
 		if ($obj == null) {
 			return;
 		}
@@ -522,7 +522,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects
 	 */
-	public function listObjects($type = null, Pager $pager = null) {
+	public function listObjects(?string $type = null, ?Pager $pager = null) {
 		if ($type == null) {
 			return array();
 		}
@@ -566,7 +566,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
-	public function findNearby($type, $query, $radius, $lat, $lng, Pager $pager = null) {
+	public function findNearby(?string $type = null, $query, $radius, $lat, $lng, ?Pager $pager = null) {
 		$params = array();
 		$params["latlng"] = $lat.",".$lng;
 		$params["radius"] = var_export($radius, true);
@@ -584,7 +584,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
-	public function findPrefix($type, $field, $prefix, Pager $pager = null) {
+	public function findPrefix(?string $type = null, $field, $prefix, ?Pager $pager = null) {
 		$params = array();
 		$params["field"] = $field;
 		$params["prefix"] = $prefix;
@@ -600,7 +600,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
-	public function findQuery($type, $query, Pager $pager = null) {
+	public function findQuery(?string $type = null, $query, ?Pager $pager = null) {
 		$params = array();
 		$params["q"] = $query;
 		$params["type"] = $type;
@@ -616,7 +616,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
-	public function findNestedQuery($type, $field, $query, Pager $pager = null) {
+	public function findNestedQuery(?string $type = null, $field, $query, ?Pager $pager = null) {
 		$params = array();
 		$params["q"] = $query;
 		$params["field"] = $field;
@@ -634,7 +634,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
-	public function findSimilar($type, $filterKey, $fields, $liketext, Pager $pager = null) {
+	public function findSimilar(?string $type = null, $filterKey, $fields, $liketext, ?Pager $pager = null) {
 		$params = array();
 		$params["fields"] = ($fields == null) ? null : $fields;
 		$params["filterid"] = $filterKey;
@@ -652,7 +652,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
-	public function findTagged($type, $tags, Pager $pager = null) {
+	public function findTagged(?string $type = null, $tags, ?Pager $pager = null) {
 		$params = array();
 		$params["tags"] = ($tags == null) ? null : $tags;
 		$params["type"] = $type;
@@ -668,7 +668,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
-	public function findTags($keyword = null, Pager $pager = null) {
+	public function findTags($keyword = null, ?Pager $pager = null) {
 		$keyword = ($keyword == null) ? "*" : $keyword."*";
 		return $this->findWildcard("tag", "tag", $keyword, $pager);
 	}
@@ -682,7 +682,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
-	public function findTermInList($type, $field, $terms, Pager $pager = null) {
+	public function findTermInList(?string $type = null, $field, $terms, ?Pager $pager = null) {
 		$params = array();
 		$params["field"] = $field;
 		$params["terms"] = $terms;
@@ -700,7 +700,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
-	public function findTerms($type, $terms = array(), $matchAll = true, Pager $pager = null) {
+	public function findTerms(?string $type = null, $terms = array(), $matchAll = true, ?Pager $pager = null) {
 		if ($terms == null) {
 			return array();
 		}
@@ -728,7 +728,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of objects found
 	 */
-	public function findWildcard($type, $field, $wildcard = "*", Pager $pager = null) {
+	public function findWildcard(?string $type = null, $field, $wildcard = "*", ?Pager $pager = null) {
 		$params = array();
 		$params["field"] = $field;
 		$params["q"] = $wildcard;
@@ -743,7 +743,7 @@ class ParaClient {
 	 * @param $terms a list of terms (property values)
 	 * @return int the number of results found
 	 */
-	public function getCount($type, $terms = array()) {
+	public function getCount(?string $type = null, $terms = array()) {
 		if ($terms === null) {
 			return 0;
 		}
@@ -796,7 +796,7 @@ class ParaClient {
 	 * @param $type2 the other type of object
 	 * @return int the number of links for the given object
 	 */
-	public function countLinks(ParaObject $obj = null, $type2 = null) {
+	public function countLinks(ParaObject $obj, $type2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
 			return 0;
 		}
@@ -815,7 +815,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of linked objects
 	 */
-	public function getLinkedObjects(ParaObject $obj = null, $type2 = null, Pager $pager = null) {
+	public function getLinkedObjects(ParaObject $obj, $type2 = null, ?Pager $pager = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
 			return array();
 		}
@@ -832,8 +832,8 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of linked objects
 	 */
-	public function findLinkedObjects(ParaObject $obj = null, $type2 = null, $field = "name", $query = "*",
-					Pager $pager = null) {
+	public function findLinkedObjects(ParaObject $obj, $type2 = null, $field = "name", $query = "*",
+					?Pager $pager = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
 			return array();
 		}
@@ -852,7 +852,7 @@ class ParaClient {
 	 * @param $id2 the other id
 	 * @return bool true if the two are linked
 	 */
-	public function isLinked(ParaObject $obj = null, $type2 = null, $id2 = null) {
+	public function isLinked(ParaObject $obj, $type2 = null, $id2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null || $id2 == null) {
 			return false;
 		}
@@ -866,7 +866,7 @@ class ParaClient {
 	 * @param $toObj the other object
 	 * @return bool true if linked
 	 */
-	public function isLinkedToObject(ParaObject $obj = null, ParaObject $toObj = null) {
+	public function isLinkedToObject(ParaObject $obj, ParaObject $toObj) {
 		if ($obj == null || $obj->getId() == null || $toObj == null || $toObj->getId() == null) {
 			return false;
 		}
@@ -881,7 +881,7 @@ class ParaClient {
 	 * @param $id2 link to the object with this id
 	 * @return string the id of the Linker object that is created
 	 */
-	public function link(ParaObject $obj = null, $id2 = null) {
+	public function link(ParaObject $obj, $id2 = null) {
 		if ($obj == null || $obj->getId() == null || $id2 == null) {
 			return null;
 		}
@@ -896,7 +896,7 @@ class ParaClient {
 	 * @param $type2 the other type
 	 * @param $id2 the other id
 	 */
-	public function unlink(ParaObject $obj = null, $type2 = null, $id2 = null) {
+	public function unlink(ParaObject $obj, $type2 = null, $id2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null || $id2 == null) {
 			return;
 		}
@@ -910,7 +910,7 @@ class ParaClient {
 	 * Deletes all Linker objects.
 	 * Only the links are deleted. Objects are left untouched.
 	 */
-	public function unlinkAll(ParaObject $obj = null) {
+	public function unlinkAll(ParaObject $obj) {
 		if ($obj == null || $obj->getId() == null) {
 			return;
 		}
@@ -924,7 +924,7 @@ class ParaClient {
 	 * @param $type2 the type of the other object
 	 * @return int the number of links
 	 */
-	public function countChildren(ParaObject $obj = null, $type2 = null) {
+	public function countChildren(ParaObject $obj, $type2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
 			return 0;
 		}
@@ -946,7 +946,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of ParaObject in a one-to-many relationship with this object
 	 */
-	public function getChildren(ParaObject $obj = null, $type2 = null, $field = null, $term = null, Pager $pager = null) {
+	public function getChildren(ParaObject $obj, $type2 = null, $field = null, $term = null, ?Pager $pager = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
 			return array();
 		}
@@ -972,7 +972,7 @@ class ParaClient {
 	 * @param $pager a Pager
 	 * @return array a list of ParaObject in a one-to-many relationship with this object
 	 */
-	public function findChildren(ParaObject $obj = null, $type2 = null, $query = "*", Pager $pager = null) {
+	public function findChildren(ParaObject $obj, $type2 = null, $query = "*", ?Pager $pager = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
 			return array();
 		}
@@ -989,7 +989,7 @@ class ParaClient {
 	 * @param $obj the object to execute this method on
 	 * @param $type2 the children's type.
 	 */
-	public function deleteChildren(ParaObject $obj = null, $type2 = null) {
+	public function deleteChildren(ParaObject $obj, $type2 = null) {
 		if ($obj == null || $obj->getId() == null || $type2 == null) {
 			return;
 		}
@@ -1130,7 +1130,7 @@ class ParaClient {
 	 * @param string $voterid the userid of the voter
 	 * @return bool true if vote was successful
 	 */
-	public function voteUp(ParaObject $obj = null, $voterid = null) {
+	public function voteUp(ParaObject $obj, $voterid = null) {
 		if ($obj == null || $voterid == null) {
 			return false;
 		}
@@ -1143,7 +1143,7 @@ class ParaClient {
 	 * @param string $voterid the userid of the voter
 	 * @return bool true if vote was successful
 	 */
-	public function voteDown(ParaObject $obj = null, $voterid = null) {
+	public function voteDown(ParaObject $obj, $voterid = null) {
 		if ($obj == null || $voterid == null) {
 			return false;
 		}
@@ -1184,7 +1184,7 @@ class ParaClient {
 	 * @param $c the constraint
 	 * @return array a map containing all validation constraints for this type.
 	 */
-	public function addValidationConstraint($type, $field, Constraint $c) {
+	public function addValidationConstraint(?string $type = null, $field, Constraint $c) {
 		if ($type == null || $field == null || $c == null) {
 			return array();
 		}
@@ -1198,7 +1198,7 @@ class ParaClient {
 	 * @param $constraintName the name of the constraint to remove
 	 * @return array a map containing all validation constraints for this type.
 	 */
-	public function removeValidationConstraint($type, $field, $constraintName) {
+	public function removeValidationConstraint(?string $type = null, $field, $constraintName) {
 		if ($type == null || $field == null || $constraintName == null) {
 			return array();
 		}
@@ -1238,7 +1238,7 @@ class ParaClient {
 		if ($allowGuestAccess && $subjectid === "*") {
 			array_push($permission, "?");
 		}
-		$resourcePath = urlencode($resourcePath);
+		$resourcePath = $this->base64_url_encode($resourcePath);
 		return $this->getEntity($this->invokePut("_permissions/".urlencode($subjectid)."/".$resourcePath, $permission));
 	}
 
@@ -1252,7 +1252,7 @@ class ParaClient {
 		if ($subjectid == null || $resourcePath == null) {
 			return array();
 		}
-		$resourcePath = urlencode($resourcePath);
+		$resourcePath = $this->base64_url_encode($resourcePath);
 		return $this->getEntity($this->invokeDelete("_permissions/".urlencode($subjectid)."/".$resourcePath));
 	}
 
@@ -1279,7 +1279,7 @@ class ParaClient {
 		if ($subjectid == null || $resourcePath == null || $httpMethod == null) {
 			return false;
 		}
-		$resourcePath = urlencode($resourcePath);
+		$resourcePath = $this->base64_url_encode($resourcePath);
 		$url = "_permissions/".urlencode($subjectid)."/".$resourcePath."/".$httpMethod;
 		return $this->getEntity($this->invokeGet($url)) == "true";
 	}
@@ -1419,4 +1419,7 @@ class ParaClient {
 		return $this->getEntity($this->invokeDelete(self::JWT_PATH)) != null;
 	}
 
+	private function base64_url_encode($input) {
+		return strtr(base64_encode($input), '+/=', '-_.');
+	}
 }
