@@ -1174,7 +1174,7 @@ class ParaClient {
 	 * @return array a map containing all validation constraints.
 	 */
 	public function validationConstraints($type = "") {
-		return $this->getEntity($this->invokeGet("_constraints/".urlencode($type)));
+		return $this->getEntity($this->invokeGet("_constraints".($type ? "/".urlencode($type) : "")));
 	}
 
 	/**
@@ -1420,6 +1420,6 @@ class ParaClient {
 	}
 
 	private function base64_url_encode($input) {
-		return strtr(base64_encode($input), '+/=', '-_.');
+		return str_replace('=', '', strtr(\base64_encode($input), '+/', '-_'));
 	}
 }

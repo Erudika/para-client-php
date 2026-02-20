@@ -601,7 +601,7 @@ class ParaClientTest extends \PHPUnit\Framework\TestCase {
 		self::$pc->removeAppSetting("prop3");
 		self::$pc->removeAppSetting(" ");
 		self::$pc->removeAppSetting(null);
-		$this->assertTrue(empty(self::$pc->appSettings("prop3")));
+		$this->assertFalse(array_key_exists("prop3", self::$pc->appSettings()));
 		$this->assertEquals(3, sizeof(self::$pc->appSettings()));
 		self::$pc->removeAppSetting("prop2");
 		self::$pc->removeAppSetting("prop1");
